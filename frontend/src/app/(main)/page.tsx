@@ -1,3 +1,4 @@
+import { LandingPageBackground } from "./_components/landing-page-background";
 import { Navbar } from "./_components/navbar";
 import { HeroSection } from "./_components/hero-section";
 import { FeaturesSection } from "./_components/features-section";
@@ -11,9 +12,10 @@ import { Footer } from "./_components/footer";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen">
+    <div className="relative min-h-screen">
+      <LandingPageBackground />
       <Navbar />
-      <main>
+      <main className="relative">
         <HeroSection />
         <FeaturesSection />
         <ModulesSection />

@@ -11,7 +11,7 @@ const trustBadges = [
 
 export function CtaSection() {
   return (
-    <section className="py-24 sm:py-32">
+    <section id="contact" className="py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl rounded-2xl bg-primary px-8 py-16 text-center text-primary-foreground shadow-lg">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
@@ -23,17 +23,23 @@ export function CtaSection() {
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <Button size="lg" variant="secondary" asChild>
-              <Link href="/register">
-                Get Started Free <ArrowRight />
+              <Link
+                href="/register"
+                className="inline-flex items-center justify-center gap-1.5"
+              >
+                Get Started Free
+                <ArrowRight className="size-4" />
               </Link>
             </Button>
             <Button
               size="lg"
               variant="outline"
-              className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+              className="border-primary-foreground/50 bg-transparent text-primary-foreground shadow-none hover:bg-primary-foreground/15 hover:text-primary-foreground"
               asChild
             >
-              <Link href="#contact">Talk to Sales</Link>
+              <Link href="#contact" className="inline-flex items-center justify-center">
+                Talk to Sales
+              </Link>
             </Button>
           </div>
 
