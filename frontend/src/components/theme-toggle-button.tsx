@@ -1,20 +1,37 @@
-'use client'
+"use client"
 
-import { Button } from '~/components/ui/button'
-import { SunIcon, MoonIcon } from 'lucide-react'
-import { useTheme } from 'next-themes'
+import * as React from "react"
+import { Button } from "~/components/ui/button"
+import { SunIcon, MoonIcon, MoonStarIcon } from "lucide-react"
+import { useTheme } from "next-themes"
 
 export const ThemeToggleButton = () => {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme()
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return null
+  }
+
   return (
     <Button
       variant="outline"
       size="icon-sm"
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      className="relative"
+      disabled={!mounted}
+      onClick={() =>
+        setTheme(resolvedTheme === "dark" ? "light" : "dark")
+      }
+      aria-label={
+        resolvedTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+      }
     >
       <SunIcon className="size-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-      <MoonIcon className="absolute size-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+      <MoonStarIcon className="absolute size-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
     </Button>
   )
 }
