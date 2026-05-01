@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { ConfigService } from '@nestjs/config';
+import { AppConfig } from './config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -18,10 +20,15 @@ async function bootstrap() {
     credentials: true,
   });
   
-  const port = process.env.PORT || 5000;
-  await app.listen(port);
+  const configService = app.get(ConfigService);
+  const appConfig = configService.get<AppConfig>('app');
+  if (!appConfig) {
+    throw new Error('App config not found');
+  }
   
-  console.log(`🚀 Multi-tenant SaaS application running on http://localhost:${port}`);
+  await app.listen(appConfig.port);
+  
+  console.log(`🚀 Multi-tenant SaaS application running on http://${appConfig.host}:${appConfig.port}`);
   console.log(`📊 Architecture: Schema-per-tenant (Cost-effective)`);
 }
 
