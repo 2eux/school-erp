@@ -15,12 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu"
-import {
-  BellIcon,
-  CircleUserRoundIcon,
-  CreditCardIcon,
-  LogOutIcon,
-} from "lucide-react"
+import { CircleUserRoundIcon, CreditCardIcon, LogOutIcon } from "lucide-react"
 
 export type HeaderUserProps = {
   user: {
@@ -75,10 +70,6 @@ export function HeaderUser({ user }: HeaderUserProps) {
           <DropdownMenuItem>
             <CreditCardIcon />
             Billing
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <BellIcon />
-            Notifications
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
