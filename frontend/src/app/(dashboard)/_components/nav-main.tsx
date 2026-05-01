@@ -1,14 +1,16 @@
 "use client"
 
+import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ChevronRight, type LucideIcon } from "lucide-react"
+import { ChevronRight, Search, type LucideIcon } from "lucide-react"
 
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "~/components/ui/collapsible"
+import { Input } from "~/components/ui/input"
 import { cn } from "~/lib/utils"
 import {
   SidebarGroup,
@@ -23,7 +25,12 @@ import {
 } from "~/components/ui/sidebar"
 
 /** Third level: links under a menu (category → menu → submenu). */
-export type NavSubmenuItem = { title: string; url: string }
+export type NavSubmenuItem = {
+  title: string
+  url: string
+  icon: LucideIcon
+  exact?: boolean
+}
 
 /** Second level: one collapsible row (optional submenu). */
 export type NavMenuEntry = {
@@ -64,7 +71,11 @@ function isActivePath(
 }
 
 function menuHasOpenSubmenu(items: NavSubmenuItem[] | undefined, pathname: string) {
-  return Boolean(items?.some((sub) => isActivePath(pathname, sub.url)))
+  return Boolean(
+    items?.some((sub) =>
+      isActivePath(pathname, sub.url, { exact: sub.exact })
+    )
+  )
 }
 
 function menuRowActive(
@@ -81,12 +92,90 @@ function menuRowActive(
   )
 }
 
+function normalizeQuery(q: string) {
+  return q.trim().toLowerCase()
+}
+
+function filterNavCategories(
+  categories: NavCategory[],
+  query: string
+): NavCategory[] {
+  const q = normalizeQuery(query)
+  if (!q) return categories
+
+  const out: NavCategory[] = []
+
+  for (const cat of categories) {
+    const catMatches = cat.label.toLowerCase().includes(q)
+    const nextMenus: NavMenuEntry[] = []
+
+    for (const menu of cat.menus) {
+      if (catMatches) {
+        nextMenus.push(menu)
+        continue
+      }
+      const subs = menu.items
+      const menuMatches = menu.title.toLowerCase().includes(q)
+      if (!subs?.length) {
+        if (menuMatches) nextMenus.push(menu)
+        continue
+      }
+      if (menuMatches) {
+        nextMenus.push(menu)
+        continue
+      }
+      const filteredSubs = subs.filter((s) =>
+        s.title.toLowerCase().includes(q)
+      )
+      if (filteredSubs.length) {
+        nextMenus.push({ ...menu, items: filteredSubs })
+      }
+    }
+
+    if (nextMenus.length) {
+      out.push({ ...cat, menus: nextMenus })
+    }
+  }
+
+  return out
+}
+
 export function NavMain({ categories }: { categories: NavCategory[] }) {
   const pathname = usePathname()
+  const [filter, setFilter] = React.useState("")
+  const filterActive = normalizeQuery(filter).length > 0
+
+  const visibleCategories = React.useMemo(
+    () => filterNavCategories(categories, filter),
+    [categories, filter]
+  )
 
   return (
     <>
-      {categories.map((category) => (
+      <SidebarGroup className="pb-0">
+        <div className="relative px-2">
+          <Search
+            className="text-muted-foreground pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2"
+            aria-hidden
+          />
+          <Input
+            type="search"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            placeholder="Filter menus…"
+            className="h-8 bg-sidebar-accent/40 pl-9"
+            aria-label="Filter sidebar menus"
+          />
+        </div>
+      </SidebarGroup>
+      {filterActive && visibleCategories.length === 0 ? (
+        <SidebarGroup>
+          <p className="text-muted-foreground px-2 text-xs">
+            No menus match &ldquo;{filter.trim()}&rdquo;.
+          </p>
+        </SidebarGroup>
+      ) : null}
+      {visibleCategories.map((category) => (
         <SidebarGroup key={category.label}>
           <SidebarGroupLabel className="flex items-center gap-2">
             {category.accentDot ? (
@@ -127,6 +216,7 @@ export function NavMain({ categories }: { categories: NavCategory[] }) {
               }
 
               const defaultOpen =
+                filterActive ||
                 menuHasOpenSubmenu(menu.items, pathname) ||
                 isActivePath(pathname, menu.url, { exact: menu.exact })
 
@@ -134,7 +224,11 @@ export function NavMain({ categories }: { categories: NavCategory[] }) {
 
               return (
                 <Collapsible
-                  key={menu.title}
+                  key={
+                    filterActive
+                      ? `${menu.title}-${normalizeQuery(filter)}`
+                      : menu.title
+                  }
                   asChild
                   defaultOpen={defaultOpen}
                 >
@@ -161,9 +255,12 @@ export function NavMain({ categories }: { categories: NavCategory[] }) {
                           <SidebarMenuSubItem key={sub.title}>
                             <SidebarMenuSubButton
                               asChild
-                              isActive={isActivePath(pathname, sub.url)}
+                              isActive={isActivePath(pathname, sub.url, {
+                                exact: sub.exact,
+                              })}
                             >
                               <Link href={sub.url}>
+                                <sub.icon className="size-4 shrink-0" />
                                 <span>{sub.title}</span>
                               </Link>
                             </SidebarMenuSubButton>
