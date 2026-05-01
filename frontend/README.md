@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# School ERP — Frontend
 
-## Getting Started
+Next.js **App Router** application for the School ERP product: marketing site, auth screens, and the main **dashboard** with sidebar navigation, headers, and module placeholders.
 
-First, run the development server:
+## Requirements
+
+- Node.js (LTS) and npm
+
+## Commands
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # development — http://localhost:3000
+npm run build    # production build
+npm run start    # run production build
+npm run lint     # ESLint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Area | Packages |
+|------|-----------|
+| Framework | Next.js 16, React 19 |
+| Styling | Tailwind CSS v4, `tailwind-merge`, `tw-animate-css` |
+| UI | Radix UI primitives, shadcn-style components (`~/components/ui`), Lucide icons |
+| Data / tables | TanStack Query, TanStack Table |
+| Forms / validation | Zod |
+| Misc | `next-themes`, Sonner, Recharts, Ant Design (antd), DnD Kit |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+See `package.json` for pinned versions.
 
-## Learn More
+## Project layout
 
-To learn more about Next.js, take a look at the following resources:
+| Path | Purpose |
+|------|---------|
+| `src/app/(main)/` | Public marketing / landing routes |
+| `src/app/(auth)/` | Login and auth layouts |
+| `src/app/(dashboard)/` | ERP shell: layout, sidebar, header, `dashboard/[...slug]` placeholders |
+| `src/components/ui/` | Shared primitives (button, sidebar, dialog, …) |
+| `src/app/(dashboard)/_components/sidebar-nav.tsx` | Navigation tree and URLs |
+| `src/app/(dashboard)/_components/nav-main.tsx` | Sidebar rendering and menu filter |
+| `src/modules/` | Feature-oriented module stubs |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Agent notes for this Next major version live in **`AGENTS.md`**.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Documentation
 
-## Deploy on Vercel
+- **[Menu structure](../doc/menu-structure.md)** — sidebar IA and routes (generated from `sidebar-nav.tsx`).
+- **[Features](../doc/features.md)** — product capabilities.
+- **[Repository README](../README.md)** — monorepo overview including the NestJS backend.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deploy
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Any Node-compatible host that supports Next.js (`next build` / `next start`). See [Next.js deployment](https://nextjs.org/docs/app/building-your-application/deploying).

@@ -1,132 +1,235 @@
-# Dashboard Menu Structure
+# Dashboard menu structure
 
-### 1️⃣ Student Management
+Authoritative mapping lives in `frontend/src/app/(dashboard)/_components/sidebar-nav.tsx` (`sidebarNavCategories`). Routes below use the app base path **`/dashboard`** (many screens are placeholders via `[...slug]` until built).
 
-- Student Admission & Enrollment
-- Student Profiles & Records
-- Class & Section Management
-- Attendance Tracking (Biometric/RFID)
-- ID Card Generation
-- Health Records
+Legend: **menu** → optional **submenu** (indented).
 
-### 2️⃣ Academics
+---
 
-- Timetable & Scheduling
-- Assignments & Homework
-- Examination & Grading
-- Student Progress Reports
-- Performance Analytics
+## Dashboard
 
-### 3️⃣ Fees & Finance
+| Accent | `bg-violet-500` |
 
-- Fee Collection & Payment
-- Fee Structure Management
-- Online Payment Gateway
-- Scholarships & Discounts
-- Financial Reports & Analytics
+- **Overview** → `/dashboard/overview`
+- **Analytics** → `/dashboard/analytics`
+- **Reports** → `/dashboard/reports/academic`
+  - Academic Reports → `/dashboard/reports/academic`
+  - Attendance Reports → `/dashboard/reports/attendance`
+  - Finance Reports → `/dashboard/reports/finance`
+  - HR Reports → `/dashboard/reports/hr`
+  - Transport Reports → `/dashboard/reports/transport`
+  - Custom Reports → `/dashboard/reports/custom`
+  - Data Export → `/dashboard/reports/data-export`
 
-### 4️⃣ Attendance Management
+---
 
-- Student Attendance
-  T- eacher & Staff Attendance
-- Biometric/RFID Integration
-- Leave Requests & Approvals
+## Academics
 
-### 5️⃣ Staff & HR Management
+| Accent | `bg-emerald-500` |
 
-- Employee Profiles
-- Payroll & Salary Slips
-- Staff Attendance
-- Performance Evaluations
-- Recruitment & Onboarding
+- **Admissions** → `/dashboard/academics/admissions/inquiries`
+  - Inquiries / Leads → `…/inquiries`
+  - Applications → `…/applications`
+  - Enrollment → `…/enrollment`
+  - Document Verification → `…/document-verification`
+  - Waiting List → `…/waiting-list`
+  - Scholarship Applications → `…/scholarships`
 
-### 6️⃣ Library Management
+- **Programs & teaching** → `/dashboard/academics/classes`
+  - Classes / Sections → `/dashboard/academics/classes`
+  - Subjects → `/dashboard/academics/subjects`
+  - Curriculum → `/dashboard/academics/curriculum`
+  - Lesson Plans → `/dashboard/academics/lesson-plans`
+  - Timetable → `/dashboard/academics/timetable`
+  - Homework → `/dashboard/academics/homework`
+  - Online Classes → `/dashboard/academics/online-classes`
+  - Study Materials → `/dashboard/academics/study-materials`
 
-- Book Cataloging
-- Issue & Return Tracking
-- Digital Library Access
-- Overdue Fine Calculation
+- **Attendance** → `/dashboard/academics/attendance`
+  - Mark attendance → `…/mark`
+  - Attendance reports → `…/reports`
+  - Leave requests → `…/leave-requests`
 
-### 7️⃣ Transport Management
+- **Examinations** → `/dashboard/academics/exams`
+  - Exam schedule → `/dashboard/academics/exams/schedule`
+  - Marks Entry → `…/marks-entry`
+  - Grades & GPA → `…/grades-gpa`
+  - Report Cards → `…/report-cards`
+  - Transcripts → `…/transcripts`
+  - Result Publish → `…/result-publish`
+  - Certificates → `…/certificates`
 
-- Route & Bus Management
-- GPS Live Tracking
-- Student Pick-up & Drop Status
-- Transport Fee Management
+- **Assignments** → `/dashboard/academics/assignments`
+  - Create assignment → `…/create`
+  - Submissions → `…/submissions`
+  - Gradebook → `…/gradebook`
 
-### 8️⃣ Hostel & Accommodation
+---
 
-- Room Allocation
-- Meal & Attendance Tracking
-- Visitor Logs
-- Hostel Fee Management
+## People
 
-### 9️⃣ Communication & Notifications
+| Accent | `bg-blue-500` |
 
-- SMS, Email & WhatsApp Alerts
-- Parent-Teacher Communication
-- Event Announcements
-- Automated Reminders
+- **Students** → `/dashboard/people/students`
+  - Student Directory → `/dashboard/people/students`
+  - Admission Records → `…/admission-records`
+  - Student Profiles → `…/profiles`
+  - Attendance → `…/attendance`
+  - Discipline / Behavior → `…/discipline`
+  - Health Records → `…/health-records`
+  - ID Cards → `…/id-cards`
+  - Promotions / Transfers → `…/promotions-transfers`
+  - Alumni → `…/alumni`
 
-### 🔟 Parent & Student Portal
+- **Parents** → `/dashboard/people/parents`
+  - Parent directory → `/dashboard/people/parents`
+  - Parent portal access → `…/portal`
+  - Parent Meetings → `…/meetings`
+  - Consent Forms → `…/consent-forms`
 
-- Student Progress Overview
-- Fee Payment & Receipts
-- Leave Application
-- Homework & Assignments
+- **Staff & HR** → `/dashboard/people/staff`
+  - Staff Directory → `/dashboard/people/staff`
+  - Teachers → `/dashboard/people/teachers`
+  - Departments → `…/departments`
+  - Designations → `…/designations`
+  - Attendance → `…/attendance`
+  - Leave Management → `…/leave`
+  - Payroll → `…/payroll`
+  - Performance Reviews → `…/performance-reviews`
+  - Recruitment → `…/recruitment`
 
-### 1️⃣1️⃣ Learning Management System (LMS)
+---
 
-- Online Classes (Live & Recorded)
-- Course & Syllabus Management
-- Online Quizzes & Assessments
-- Study Materials & Resources
+## Operations
 
-### 1️⃣2️⃣ Inventory & Asset Management
+| Accent | `bg-orange-500` |
 
-- Stationery & Books Stock
-- IT Assets Tracking
-- Maintenance & Repair Logs
+- **Finance** → `/dashboard/operations/finance`
+  - Fee Structure → `/dashboard/operations/finance/fee-structure`
+  - Discounts / Waivers → `…/discounts-waivers`
+  - Scholarships → `…/scholarships`
+  - Invoices → `…/invoices`
+  - Payments → `…/payments`
+  - Due Collection → `…/due-collection`
+  - Refunds → `…/refunds`
+  - Expense Management → `…/expense-management`
+  - Budgeting → `…/budgeting`
+  - Accounting Ledger → `…/accounting-ledger`
+  - Financial Reports → `…/financial-reports`
 
-### 1️⃣3️⃣ Events & Activities
+- **Events** → `/dashboard/operations/events/calendar`
+  - Calendar → `/dashboard/operations/events/calendar`
+  - School events → `…/school`
+  - Holidays → `…/holidays`
 
-- School Events & Calendar
-- Sports & Extracurricular Activities
-- Certificates & Awards
+---
 
-### 1️⃣4️⃣ Alumni Management
+## Campus Services
 
-- Alumni Database
-- Events & Fundraising
-- Newsletter & Contributions
+| Accent | `bg-cyan-500` |
 
-### 1️⃣5️⃣ Multi-Branch Management
+- **Transport** → `/dashboard/operations/campus/transport`
+  - Vehicles → `…/transport/vehicles`
+  - Routes → `…/transport/routes`
+  - Stops → `…/transport/stops`
+  - Transport Fees → `…/transport/fees`
 
-- Branch-wise Data Synchronization
-- Role-based Access Control
-- Centralized Dashboard
+- **Library** → `/dashboard/operations/campus/library/books`
+  - Books → `…/library/books`
+  - Categories → `…/library/categories`
+  - Issue / Return → `…/library/issue-return`
+  - Fines → `…/library/fines`
 
-### 1️⃣6️⃣ Reports & Analytics
+- **Hostel** → `/dashboard/operations/campus/hostel/rooms`
+  - Rooms → `…/hostel/rooms`
+  - Allocations → `…/hostel/allocations`
+  - Hostel Fees → `…/hostel/fees`
 
-- Attendance Reports
-- Fee & Finance Reports
-- Student Performance Analytics
-- Predictive AI Insights
+- **Inventory** → `/dashboard/operations/campus/inventory/assets`
+  - Assets → `…/inventory/assets`
+  - Stock Items → `…/inventory/stock-items`
+  - Purchase Orders → `…/inventory/purchase-orders`
+  - Suppliers → `…/inventory/suppliers`
 
-### 1️⃣7️⃣ Security & Compliance
+- **Cafeteria** → `/dashboard/operations/campus/cafeteria`
+- **Security / Gate Pass** → `/dashboard/operations/campus/security-gate-pass`
 
-- Role-Based Access Control
-- Data Privacy & GDPR Compliance
-- Cloud Backup & Security
+---
 
-### 1️⃣8️⃣ AI & Automation
+## Communication
 
-- AI-Based Chatbot for FAQs
-- Auto Attendance Marking
-- Predictive Student Performance
+| Accent | `bg-yellow-500` |
 
-### 1️⃣9️⃣ Mobile App Integration
+- **Outreach** → `/dashboard/communication/outreach/announcements`
+  - Announcements → `/dashboard/communication/outreach/announcements`
+  - Messages → `…/messages`
+  - Email Campaigns → `…/email-campaigns`
+  - SMS / WhatsApp → `…/alerts`
+  - Push Notifications → `…/push-notifications`
+  - Notice board → `…/notice-board`
+  - Outreach / CRM → `…/outreach-crm`
 
-- Android & iOS Support
-- Push Notifications
-- Homework & Fee Payment
+- **Parent engagement** → `/dashboard/communication/parent-engagement/meetings`
+  - Parent meetings → `…/meetings`
+  - Progress sharing → `…/progress`
+
+---
+
+## Administration
+
+| Accent | `bg-zinc-400` |
+
+- **School setup** → `/dashboard/admin/school-setup/profile`
+  - Schools / Branches → `/dashboard/admin/schools-branches`
+  - School profile → `/dashboard/admin/school-setup/profile`
+  - Academic Years → `/dashboard/admin/school-setup/academic-years`
+  - Terms / Semesters → `/dashboard/admin/school-setup/terms-semesters`
+  - Departments → `/dashboard/admin/school-setup/departments`
+  - Branches → `/dashboard/admin/school-setup/branches`
+
+- **Users & access** → `/dashboard/admin/users-access/users`
+  - User management → `/dashboard/admin/users-access/users`
+  - Roles & permissions → `/dashboard/admin/users-access/roles`
+  - Audit logs → `/dashboard/admin/users-access/audit-logs`
+
+- **Integrations** → `/dashboard/admin/integrations/payment-gateways`
+  - Payment Gateways → `/dashboard/admin/integrations/payment-gateways`
+  - SMS Providers → `…/sms-providers`
+  - Email Providers → `…/email-providers`
+  - Video Conferencing → `…/video-conferencing`
+  - LMS Integrations → `…/lms`
+  - API Keys / Webhooks → `…/api-keys-webhooks`
+
+- **System** → `/dashboard/admin/workflow-automation`
+  - Workflow Automation → `/dashboard/admin/workflow-automation`
+  - Custom Fields → `/dashboard/admin/custom-fields`
+  - Templates → `/dashboard/admin/templates`
+  - Backup & Restore → `/dashboard/admin/system/backup`
+  - Subscription / Billing → `/dashboard/admin/subscription-billing`
+  - System Settings → `/dashboard/admin/system/settings`
+
+---
+
+## Support
+
+| Accent | `bg-sky-500` |
+
+- **Help Center** → `/dashboard/support/help-center`
+- **Tickets** → `/dashboard/support/tickets`
+- **Product Updates** → `/dashboard/support/product-updates`
+
+---
+
+## Sidebar footer (secondary)
+
+Defined in `sidebarSecondaryNav` (same file):
+
+- **Profile** → `/profile`
+- **Settings** → `/dashboard/settings`
+
+---
+
+## Related
+
+- Navigation rendering & filters: `frontend/src/app/(dashboard)/_components/nav-main.tsx`
+- Product features overview: `doc/features.md`
