@@ -25,7 +25,12 @@ import {
 } from "~/components/ui/sidebar"
 
 /** Third level: links under a menu (category → menu → submenu). */
-export type NavSubmenuItem = { title: string; url: string }
+export type NavSubmenuItem = {
+  title: string
+  url: string
+  icon: LucideIcon
+  exact?: boolean
+}
 
 /** Second level: one collapsible row (optional submenu). */
 export type NavMenuEntry = {
@@ -66,7 +71,11 @@ function isActivePath(
 }
 
 function menuHasOpenSubmenu(items: NavSubmenuItem[] | undefined, pathname: string) {
-  return Boolean(items?.some((sub) => isActivePath(pathname, sub.url)))
+  return Boolean(
+    items?.some((sub) =>
+      isActivePath(pathname, sub.url, { exact: sub.exact })
+    )
+  )
 }
 
 function menuRowActive(
@@ -246,9 +255,12 @@ export function NavMain({ categories }: { categories: NavCategory[] }) {
                           <SidebarMenuSubItem key={sub.title}>
                             <SidebarMenuSubButton
                               asChild
-                              isActive={isActivePath(pathname, sub.url)}
+                              isActive={isActivePath(pathname, sub.url, {
+                                exact: sub.exact,
+                              })}
                             >
                               <Link href={sub.url}>
+                                <sub.icon className="size-4 shrink-0" />
                                 <span>{sub.title}</span>
                               </Link>
                             </SidebarMenuSubButton>
