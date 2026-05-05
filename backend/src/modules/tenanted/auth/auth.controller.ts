@@ -1,37 +1,9 @@
 import { Controller, Post, Get, Body, Req, UseGuards } from '@nestjs/common';
-import { IsEmail, IsString, IsNotEmpty, MinLength } from 'class-validator';
 import { AuthService } from './auth.service';
 import type { RequestWithTenant } from '../../../tenancy/tenant.middleware';
 import { JwtAuthGuard } from './jwt-auth.guard';
-
-class RegisterDto {
-  @IsEmail()
-  @IsNotEmpty()
-  email: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @MinLength(6)
-  password: string;
-
-  @IsString()
-  @IsNotEmpty()
-  firstName: string;
-
-  @IsString()
-  @IsNotEmpty()
-  lastName: string;
-}
-
-class LoginDto {
-  @IsEmail()
-  @IsNotEmpty()
-  email: string;
-
-  @IsString()
-  @IsNotEmpty()
-  password: string;
-}
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -44,8 +16,7 @@ export class AuthController {
       req.tenantId!,
       dto.email,
       dto.password,
-      dto.firstName,
-      dto.lastName,
+      dto.name,
     );
   }
 

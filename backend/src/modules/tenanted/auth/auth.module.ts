@@ -1,18 +1,35 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
+import type { SignOptions } from 'jsonwebtoken';
+import type { StringValue } from 'ms';
 import { PassportModule } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
-import { TenantModule } from '../../public/tenants/tenants.module';
+import { TenantModule } from '../../public/tenants/tenant.module';
 
 @Module({
   imports: [
     TenantModule,
     PassportModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'your-secret-key',
-      signOptions: { expiresIn: '24h' },
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService): JwtModuleOptions => {
+        const secret = config.get<string>('jwt.secret');
+        const expiresIn = config.get<string>('jwt.expiresIn');
+        if (!secret) {
+          throw new Error('jwt.secret is not configured');
+        }
+        const signOptions: SignOptions = {
+          expiresIn: (expiresIn ?? '24h') as StringValue,
+        };
+        return {
+          secret,
+          signOptions,
+        };
+      },
     }),
   ],
   controllers: [AuthController],

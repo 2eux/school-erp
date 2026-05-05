@@ -20,21 +20,23 @@ export const envValidationSchema = Joi.object({
   VERSION: Joi.string(),
   NAME: Joi.string(),
   PORT: optionalTcpPort,
-  DATABASE_HOST: Joi.string().trim().min(1).required().messages({
-    'string.empty': 'DATABASE_HOST is required',
-    'any.required': 'DATABASE_HOST is required',
+  DB_HOST: Joi.string().trim().min(1).required().messages({
+    'string.empty': 'DB_HOST is required',
+    'any.required': 'DB_HOST is required',
   }),
-  DATABASE_PORT: optionalTcpPort,
-  DATABASE_USERNAME: Joi.string().required().messages({
-    'any.required': 'DATABASE_USERNAME is required',
+  DB_PORT: optionalTcpPort,
+  DB_USERNAME: Joi.string().required().messages({
+    'any.required': 'DB_USERNAME is required',
   }),
-  DATABASE_PASSWORD: Joi.string().required().messages({
-    'any.required': 'DATABASE_PASSWORD is required',
+  DB_PASSWORD: Joi.string().required().messages({
+    'any.required': 'DB_PASSWORD is required',
   }),
-  DATABASE_NAME: Joi.string().trim().min(1).required().messages({
-    'string.empty': 'DATABASE_NAME is required',
-    'any.required': 'DATABASE_NAME is required',
+  DB_NAME: Joi.string().trim().min(1).required().messages({
+    'string.empty': 'DB_NAME is required',
+    'any.required': 'DB_NAME is required',
   }),
+  DB_SYNC: Joi.boolean().default(false),
+  DB_LOGGING: Joi.boolean().default(false),
   JWT_SECRET: Joi.string().min(8).required().messages({
     'string.min': 'JWT_SECRET must be at least 8 characters',
     'any.required': 'JWT_SECRET is required',

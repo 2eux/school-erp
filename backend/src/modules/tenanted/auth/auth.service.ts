@@ -16,8 +16,7 @@ export class AuthService {
     tenantId: string,
     email: string,
     password: string,
-    firstName: string,
-    lastName: string
+    name: string,
   ) {
     const connection = await this.tenantConnectionService.getTenantConnection(schemaName);
     const userRepo = connection.getRepository(User);
@@ -31,8 +30,7 @@ export class AuthService {
     const user = userRepo.create({
       email,
       password: hashedPassword,
-      firstName,
-      lastName,
+      name,
     });
 
     await userRepo.save(user);
@@ -69,8 +67,7 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        name: user.name,
       },
     };
   }
