@@ -284,6 +284,300 @@ Acceptance criteria:
 
 ---
 
+---
+
+## Suggested Stories — Missing or Not Yet Implemented
+
+The stories below describe functionality that is absent from the current codebase. Each one is marked with a status tag so the team can prioritise them.
+
+> **Status tags**
+> - `[NOT IMPLEMENTED]` — feature is completely absent; no endpoint or service method exists
+> - `[PARTIAL]` — related data/logic exists but the specific behaviour is not exposed or enforced
+
+---
+
+### Authentication
+
+---
+
+**US-AUTH-04 — Log out and invalidate the current session** `[NOT IMPLEMENTED]`
+
+> As a logged-in user,
+> I want to log out,
+> so that my access token is no longer valid and my session is closed.
+
+Acceptance criteria:
+- Calling the logout endpoint makes the current token unusable.
+- Subsequent requests with the old token are rejected.
+- Note: JWTs are currently stateless; a token denylist or short-lived refresh-token mechanism is needed.
+
+---
+
+**US-AUTH-05 — Refresh an expiring access token** `[NOT IMPLEMENTED]`
+
+> As a logged-in user,
+> I want to exchange a near-expiry token for a new one without re-entering my password,
+> so that my session stays active during long working sessions.
+
+Acceptance criteria:
+- A dedicated refresh endpoint accepts a valid (non-expired) token and returns a new one.
+- The old token is invalidated upon refresh.
+- Expired tokens cannot be refreshed.
+
+---
+
+**US-AUTH-06 — Request a password reset link** `[NOT IMPLEMENTED]`
+
+> As a user who has forgotten their password,
+> I want to request a reset link sent to my registered email address,
+> so that I can regain access to my account without contacting support.
+
+Acceptance criteria:
+- I submit my email address.
+- If the email is registered, a time-limited reset link is sent.
+- If the email is not registered, the response gives no indication (security best practice).
+- The reset link expires after a set period (e.g., 1 hour).
+
+---
+
+**US-AUTH-07 — Reset password using a link** `[NOT IMPLEMENTED]`
+
+> As a user who requested a password reset,
+> I want to set a new password using the link I received,
+> so that I can log in again.
+
+Acceptance criteria:
+- The reset link contains a single-use token.
+- I can submit a new password (minimum 6 characters).
+- After reset, the token is invalidated and cannot be reused.
+- I can log in immediately with the new password.
+
+---
+
+**US-AUTH-08 — Verify email address after registration** `[NOT IMPLEMENTED]`
+
+> As a newly registered user,
+> I want to verify my email address,
+> so that the platform can confirm I own the address I signed up with.
+
+Acceptance criteria:
+- After registration, a verification email is sent.
+- Clicking the link marks my account as email-verified.
+- Unverified accounts may have limited access (e.g., cannot create schools) until verified.
+
+---
+
+### Users
+
+---
+
+**US-USER-07 — Change my own password** `[NOT IMPLEMENTED]`
+
+> As a logged-in user,
+> I want to change my password by providing my current password and a new one,
+> so that I can update my credentials without admin involvement.
+
+Acceptance criteria:
+- I provide my current password and a new password (minimum 6 characters).
+- If the current password is wrong, the change is rejected.
+- The new password is hashed and stored; old password no longer works.
+- I do not need to re-enter my current password if I am a Super Admin changing another user's password.
+
+---
+
+**US-USER-08 — Change my email address** `[NOT IMPLEMENTED]`
+
+> As a logged-in user,
+> I want to update my email address,
+> so that my login credential stays current.
+
+Acceptance criteria:
+- I provide my new email address and confirm my current password.
+- If the new email is already in use by another account, the change is rejected.
+- A verification email is sent to the new address before the change takes effect.
+
+---
+
+**US-USER-09 — Search and filter platform users** `[NOT IMPLEMENTED]`
+
+> As a Super Admin,
+> I want to search users by name, email, role, or active status,
+> so that I can find specific accounts quickly without scrolling through the full list.
+
+Acceptance criteria:
+- I can filter by partial name or email (case-insensitive).
+- I can filter by `platformRole` and/or `isActive`.
+- Results are paginated.
+
+---
+
+**US-USER-10 — Paginate the user list** `[NOT IMPLEMENTED]`
+
+> As a Super Admin,
+> I want the user list to be paginated,
+> so that the API does not return thousands of records in one response as the platform grows.
+
+Acceptance criteria:
+- I can specify a page number and page size.
+- The response includes total count, current page, and the data slice.
+
+---
+
+**US-USER-11 — Reactivate a deactivated account** `[PARTIAL]`
+
+> As a Super Admin,
+> I want to reactivate a previously deactivated user account,
+> so that a user who was temporarily suspended can regain access.
+
+Acceptance criteria:
+- Setting `isActive` to `true` on a deactivated user re-enables their login.
+- This is a distinct action from deletion and should be confirmable.
+- Note: The `PATCH /platform/users/:id` endpoint technically allows this today via `isActive: true`, but there is no explicit "reactivate" path or confirmation flow.
+
+---
+
+### Schools (Tenants)
+
+---
+
+**US-TENANT-06 — Look up a school by its slug** `[NOT IMPLEMENTED]`
+
+> As an authenticated user or system,
+> I want to retrieve a school's details using its slug,
+> so that I can resolve a URL-friendly identifier to a full school record.
+
+Acceptance criteria:
+- I provide a slug and receive the matching school record.
+- A not-found error is returned if no school has that slug.
+- Note: `findBySlug` exists in `TenantService` but is not exposed via any controller route.
+
+---
+
+**US-TENANT-07 — Filter schools by status** `[NOT IMPLEMENTED]`
+
+> As a Super Admin,
+> I want to filter the school list by status (e.g., active, suspended, archived),
+> so that I can quickly audit schools in a particular state.
+
+Acceptance criteria:
+- I can pass an optional status filter to the list endpoint.
+- Only schools matching the status are returned.
+- Without a filter, all schools are returned (existing behaviour).
+
+---
+
+**US-TENANT-08 — Transfer school ownership to another member** `[NOT IMPLEMENTED]`
+
+> As the Owner of a school,
+> I want to transfer ownership to another existing member,
+> so that someone else can take over administration of the school.
+
+Acceptance criteria:
+- I can designate another current member of the school as the new Owner.
+- My own role is downgraded to Admin (or Member) on transfer.
+- There can only be one Owner per school at any time.
+- Super Admin can also perform this transfer.
+
+---
+
+**US-TENANT-09 — Suspend or archive a school** `[PARTIAL]`
+
+> As a Super Admin,
+> I want to suspend or archive a school,
+> so that I can disable access without permanently destroying the data.
+
+Acceptance criteria:
+- Setting status to `suspended` prevents tenant-level logins for that school.
+- Setting status to `archived` marks the school as read-only/inactive for historical records.
+- The school's data and schema are preserved in both cases.
+- Note: The `status` field and `TenantStatus` enum exist, but no login guard currently checks tenant status before granting access.
+
+---
+
+**US-TENANT-10 — Paginate the school list** `[NOT IMPLEMENTED]`
+
+> As a Super Admin,
+> I want the school list to be paginated,
+> so that large deployments with many schools remain performant.
+
+Acceptance criteria:
+- I can specify a page number and page size.
+- The response includes total count, current page, and the data slice.
+
+---
+
+### Memberships
+
+---
+
+**US-MEMBER-07 — School Owner invites a user to their school** `[NOT IMPLEMENTED]`
+
+> As the Owner of a school,
+> I want to add an existing platform user to my school,
+> so that I can manage my school's team without requiring Super Admin involvement.
+
+Acceptance criteria:
+- An Owner can add users with roles of `admin` or `member` (not `owner`).
+- The user must already have a platform account.
+- Duplicate memberships are rejected.
+- Note: Currently only Super Admins can create memberships. Owners have no self-service path.
+
+---
+
+**US-MEMBER-08 — School Admin manages memberships within their school** `[NOT IMPLEMENTED]`
+
+> As an Admin of a school,
+> I want to add and remove members from my school,
+> so that day-to-day team management does not require escalating to the platform operator.
+
+Acceptance criteria:
+- An Admin can add users as `member` (not `admin` or `owner`).
+- An Admin can remove `member`-level memberships.
+- An Admin cannot change or remove another Admin's membership or the Owner's membership.
+
+---
+
+**US-MEMBER-09 — Leave a school** `[NOT IMPLEMENTED]`
+
+> As a member or admin of a school,
+> I want to remove myself from the school,
+> so that I can voluntarily give up access without waiting for an admin action.
+
+Acceptance criteria:
+- I can delete my own membership.
+- An Owner cannot leave a school they own — they must transfer ownership first.
+- My platform account is not affected.
+
+---
+
+**US-MEMBER-10 — View my membership within a specific school** `[NOT IMPLEMENTED]`
+
+> As a logged-in user,
+> I want to see my own membership record for a given school,
+> so that I can confirm my current role without fetching the full member list.
+
+Acceptance criteria:
+- I provide a school ID and receive my membership record (role, joined date).
+- If I have no membership in that school, a not-found response is returned.
+- Note: Today a user would need to call `GET /memberships/user/:userId` and filter client-side.
+
+---
+
+**US-MEMBER-11 — Enforce one Owner per school** `[NOT IMPLEMENTED]`
+
+> As a platform rule,
+> when a new member is assigned the Owner role,
+> the previous Owner should be automatically downgraded,
+> so that each school always has exactly one Owner.
+
+Acceptance criteria:
+- Assigning `owner` to a membership checks for an existing owner.
+- The existing owner is demoted to `admin` (or a chosen role) automatically.
+- This rule applies when creating a membership with role `owner` or when updating a role to `owner`.
+- Note: Currently there is no guard against multiple Owners existing for the same school.
+
+---
+
 ## Story Map Summary
 
 ```
