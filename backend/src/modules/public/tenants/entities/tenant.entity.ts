@@ -1,5 +1,13 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToMany,
+} from 'typeorm';
 import { TenantStatus } from '../enums/tenant-status.enum';
+import { Membership } from '../../memberships/entities/membership.entity';
 
 @Entity('tenants', { schema: 'public' })
 export class Tenant {
@@ -24,6 +32,9 @@ export class Tenant {
 
   @Column({ type: 'enum', enum: TenantStatus, default: TenantStatus.ACTIVE })
   status: TenantStatus;
+
+  @OneToMany(() => Membership, (membership) => membership.tenant)
+  memberships: Membership[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

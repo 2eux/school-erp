@@ -4,7 +4,7 @@ import { MembershipRole } from '../enums/membership-role.enum';
 export class CreateMembershipDto {
   @IsUUID()
   @IsNotEmpty()
-  identityId: string;
+  userId: string;
 
   @IsUUID()
   @IsNotEmpty()

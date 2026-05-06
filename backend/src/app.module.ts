@@ -11,6 +11,8 @@ import { getMasterDbConfig } from './database/database.config';
 import { ProductModule } from './modules/tenanted/products/product.module';
 import { MembershipModule } from './modules/public/memberships/membership.module';
 import { AuthModule } from './modules/tenanted/auth/auth.module';
+import { PlatformAuthModule } from './modules/public/auth/platform-auth.module';
+import { UserModule } from './modules/public/users/user.module';
 import { TenantMiddleware } from './tenancy/tenant.middleware';
 import { TenantModule } from './modules/public/tenants/tenant.module';
 
@@ -28,6 +30,8 @@ const envFilePath = ['.env', `.env.${nodeEnv}`];
     TypeOrmModule.forRoot(getMasterDbConfig()),
     HealthModule,
     TenantModule,
+    PlatformAuthModule,
+    UserModule,
     AuthModule,
     CatModule,
     TaskModule,
@@ -39,15 +43,22 @@ const envFilePath = ['.env', `.env.${nodeEnv}`];
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(TenantMiddleware)
-    .exclude(
-      { path: '/', method: RequestMethod.GET },
-      { path: '/info', method: RequestMethod.GET },
-      { path: 'tenants', method: RequestMethod.ALL },
-      { path: 'tenants/*path', method: RequestMethod.ALL },
-      { path: 'health', method: 0 },
-      { path: 'health/*path', method: 0 },
-    )
-    .forRoutes('*');
+    consumer
+      .apply(TenantMiddleware)
+      .exclude(
+        { path: '/', method: RequestMethod.GET },
+        { path: '/info', method: RequestMethod.GET },
+        { path: 'health', method: RequestMethod.ALL },
+        { path: 'health/*path', method: RequestMethod.ALL },
+        { path: 'tenants', method: RequestMethod.ALL },
+        { path: 'tenants/*path', method: RequestMethod.ALL },
+        { path: 'memberships', method: RequestMethod.ALL },
+        { path: 'memberships/*path', method: RequestMethod.ALL },
+        { path: 'platform/auth', method: RequestMethod.ALL },
+        { path: 'platform/auth/*path', method: RequestMethod.ALL },
+        { path: 'platform/users', method: RequestMethod.ALL },
+        { path: 'platform/users/*path', method: RequestMethod.ALL },
+      )
+      .forRoutes('*');
   }
 }

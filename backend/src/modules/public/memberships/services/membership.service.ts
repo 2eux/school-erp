@@ -26,14 +26,14 @@ export class MembershipService {
     }
 
     const existing = await this.membershipRepository.findOne({
-      where: { identityId: dto.identityId, tenantId: dto.tenantId },
+      where: { userId: dto.userId, tenantId: dto.tenantId },
     });
     if (existing) {
-      throw new ConflictException('Membership already exists for this identity and tenant');
+      throw new ConflictException('Membership already exists for this user and tenant');
     }
 
     const membership = this.membershipRepository.create({
-      identityId: dto.identityId,
+      userId: dto.userId,
       tenantId: dto.tenantId,
       role: dto.role ?? MembershipRole.MEMBER,
     });
@@ -59,9 +59,9 @@ export class MembershipService {
     });
   }
 
-  async findByIdentityId(identityId: string): Promise<Membership[]> {
+  async findByUserId(userId: string): Promise<Membership[]> {
     return this.membershipRepository.find({
-      where: { identityId },
+      where: { userId },
       order: { createdAt: 'ASC' },
     });
   }

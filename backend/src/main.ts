@@ -1,5 +1,5 @@
-import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { NestFactory, Reflector } from '@nestjs/core';
+import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { AppConfig } from './config';
@@ -18,6 +18,12 @@ async function bootstrap() {
   }));
 
   app.useGlobalFilters(new GlobalExceptionFilter());
+
+  app.useGlobalInterceptors(
+    new ClassSerializerInterceptor(app.get(Reflector), {
+      enableImplicitConversion: true,
+    }),
+  );
 
   
   app.enableCors({
