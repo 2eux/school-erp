@@ -586,28 +586,48 @@ Platform Admin
 ├── Authentication
 │   ├── US-AUTH-01  Register account
 │   ├── US-AUTH-02  Log in
-│   └── US-AUTH-03  View own profile
+│   ├── US-AUTH-03  View own profile
+│   ├── US-AUTH-04  Log out / invalidate token          [NOT IMPLEMENTED]
+│   ├── US-AUTH-05  Refresh access token                [NOT IMPLEMENTED]
+│   ├── US-AUTH-06  Request password reset link         [NOT IMPLEMENTED]
+│   ├── US-AUTH-07  Reset password via link             [NOT IMPLEMENTED]
+│   └── US-AUTH-08  Verify email after registration     [NOT IMPLEMENTED]
 │
 ├── Users
-│   ├── US-USER-01  Create user            [Super Admin]
-│   ├── US-USER-02  List all users         [Super Admin]
-│   ├── US-USER-03  View user profile      [Super Admin / Self]
-│   ├── US-USER-04  Update own profile     [Self]
-│   ├── US-USER-05  Change role / deactivate [Super Admin]
-│   └── US-USER-06  Delete user            [Super Admin]
+│   ├── US-USER-01  Create user                         [Super Admin]
+│   ├── US-USER-02  List all users                      [Super Admin]
+│   ├── US-USER-03  View user profile                   [Super Admin / Self]
+│   ├── US-USER-04  Update own profile                  [Self]
+│   ├── US-USER-05  Change role / deactivate            [Super Admin]
+│   ├── US-USER-06  Delete user                         [Super Admin]
+│   ├── US-USER-07  Change own password                 [NOT IMPLEMENTED]
+│   ├── US-USER-08  Change email address                [NOT IMPLEMENTED]
+│   ├── US-USER-09  Search and filter users             [NOT IMPLEMENTED]
+│   ├── US-USER-10  Paginate user list                  [NOT IMPLEMENTED]
+│   └── US-USER-11  Reactivate deactivated account      [PARTIAL]
 │
 ├── Schools (Tenants)
-│   ├── US-TENANT-01  Create school        [Any authenticated user]
-│   ├── US-TENANT-02  List my schools      [Any authenticated user]
-│   ├── US-TENANT-03  View school details  [Member / Super Admin]
-│   ├── US-TENANT-04  Update school        [Owner / Super Admin]
-│   └── US-TENANT-05  Delete school        [Super Admin]
+│   ├── US-TENANT-01  Create school                     [Any authenticated user]
+│   ├── US-TENANT-02  List my schools                   [Any authenticated user]
+│   ├── US-TENANT-03  View school details               [Member / Super Admin]
+│   ├── US-TENANT-04  Update school                     [Owner / Super Admin]
+│   ├── US-TENANT-05  Delete school                     [Super Admin]
+│   ├── US-TENANT-06  Look up school by slug            [NOT IMPLEMENTED]
+│   ├── US-TENANT-07  Filter schools by status          [NOT IMPLEMENTED]
+│   ├── US-TENANT-08  Transfer school ownership         [NOT IMPLEMENTED]
+│   ├── US-TENANT-09  Suspend or archive a school       [PARTIAL]
+│   └── US-TENANT-10  Paginate school list              [NOT IMPLEMENTED]
 │
 └── Memberships
-    ├── US-MEMBER-01  Add user to school    [Super Admin]
-    ├── US-MEMBER-02  List school members   [Authenticated]
-    ├── US-MEMBER-03  List user's schools   [Authenticated]
-    ├── US-MEMBER-04  View membership       [Authenticated]
-    ├── US-MEMBER-05  Change member role    [Super Admin]
-    └── US-MEMBER-06  Remove from school   [Super Admin]
+    ├── US-MEMBER-01  Add user to school                 [Super Admin]
+    ├── US-MEMBER-02  List school members                [Authenticated]
+    ├── US-MEMBER-03  List user's schools                [Authenticated]
+    ├── US-MEMBER-04  View membership                    [Authenticated]
+    ├── US-MEMBER-05  Change member role                 [Super Admin]
+    ├── US-MEMBER-06  Remove from school                 [Super Admin]
+    ├── US-MEMBER-07  Owner invites user to school       [NOT IMPLEMENTED]
+    ├── US-MEMBER-08  Admin manages school memberships   [NOT IMPLEMENTED]
+    ├── US-MEMBER-09  Leave a school                     [NOT IMPLEMENTED]
+    ├── US-MEMBER-10  View own membership in a school    [NOT IMPLEMENTED]
+    └── US-MEMBER-11  Enforce one owner per school       [NOT IMPLEMENTED]
 ```
