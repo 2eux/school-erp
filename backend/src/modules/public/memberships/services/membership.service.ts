@@ -1,14 +1,11 @@
-import {
-  Injectable,
-  ConflictException,
-  NotFoundException,
-} from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Membership } from '../entities/membership.entity';
+import { RequestContextDto } from '~/common/dto/request-context.dto';
+import { TenantService } from '~/platform/tenants/services/tenant.service';
 import { CreateMembershipDto } from '../dto/create-membership.dto';
 import { UpdateMembershipRoleDto } from '../dto/update-membership-role.dto';
-import { TenantService } from '~/platform/tenants/services/tenant.service';
+import { Membership } from '../entities/membership.entity';
 import { MembershipRole } from '../enums/membership-role.enum';
 
 @Injectable()
@@ -17,10 +14,13 @@ export class MembershipService {
     @InjectRepository(Membership)
     private readonly membershipRepository: Repository<Membership>,
     private readonly tenantService: TenantService,
-  ) {}
+  ) { }
 
-  async create(dto: CreateMembershipDto): Promise<Membership> {
-    const tenant = await this.tenantService.findById(dto.tenantId);
+  async create(
+    ctx: RequestContextDto,
+    dto: CreateMembershipDto,
+  ): Promise<Membership> {
+    const tenant = await this.tenantService.findById(ctx, dto.tenantId);
     if (!tenant) {
       throw new NotFoundException('Tenant not found');
     }
@@ -40,7 +40,7 @@ export class MembershipService {
     return this.membershipRepository.save(membership);
   }
 
-  async findById(id: string): Promise<Membership> {
+  async findById(ctx: RequestContextDto, id: string): Promise<Membership> {
     const m = await this.membershipRepository.findOne({ where: { id } });
     if (!m) {
       throw new NotFoundException('Membership not found');
@@ -48,8 +48,11 @@ export class MembershipService {
     return m;
   }
 
-  async findByTenantId(tenantId: string): Promise<Membership[]> {
-    const tenant = await this.tenantService.findById(tenantId);
+  async findByTenantId(
+    ctx: RequestContextDto,
+    tenantId: string,
+  ): Promise<Membership[]> {
+    const tenant = await this.tenantService.findById(ctx, tenantId);
     if (!tenant) {
       throw new NotFoundException('Tenant not found');
     }
@@ -59,21 +62,25 @@ export class MembershipService {
     });
   }
 
-  async findByUserId(userId: string): Promise<Membership[]> {
+  async findByUserId(ctx: RequestContextDto, userId: string): Promise<Membership[]> {
     return this.membershipRepository.find({
       where: { userId },
       order: { createdAt: 'ASC' },
     });
   }
 
-  async updateRole(id: string, dto: UpdateMembershipRoleDto): Promise<Membership> {
-    const membership = await this.findById(id);
+  async updateRole(
+    ctx: RequestContextDto,
+    id: string,
+    dto: UpdateMembershipRoleDto,
+  ): Promise<Membership> {
+    const membership = await this.findById(ctx, id);
     membership.role = dto.role;
     return this.membershipRepository.save(membership);
   }
 
-  async remove(id: string): Promise<void> {
-    await this.findById(id);
+  async remove(ctx: RequestContextDto, id: string): Promise<void> {
+    await this.findById(ctx, id);
     await this.membershipRepository.delete(id);
   }
 }

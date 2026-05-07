@@ -1,30 +1,25 @@
 import {
-  Controller,
-  Post,
-  Get,
-  Delete,
-  Patch,
   Body,
+  Controller,
+  Delete,
+  Get,
   Param,
   ParseUUIDPipe,
+  Patch,
+  Post,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { TenantService } from '../services/tenant.service';
-import { CreateTenantDto } from '../dto/create-tenant.dto';
-import { UpdateTenantDto } from '../dto/update-tenant.dto';
+import { RequestContext } from '~/common/decorators/request-context.decorator';
+import { Roles } from '~/common/decorators/roles.decorator';
+import { RequestContextDto } from '~/common/dto/request-context.dto';
 import { PlatformJwtAuthGuard } from '~/common/guards/platform-jwt-auth.guard';
 import { RolesGuard } from '~/common/guards/roles.guard';
-import { Roles } from '~/common/decorators/roles.decorator';
-import { CurrentUser } from '~/common/decorators/current-user.decorator';
 import { PlatformRole } from '~/platform/users/enums/platform-role.enum';
-import { RequestContext } from '~/common/decorators/request-context.decorator';
-import { RequestContextDto } from '~/common/dto/request-context.dto';
-
-interface PlatformUser {
-  userId: string;
-  email: string;
-  platformRole: PlatformRole;
-}
+import { CreateTenantDto } from '../dto/create-tenant.dto';
+import { UpdateTenantDto } from '../dto/update-tenant.dto';
+import { TenantService } from '../services/tenant.service';
+import { Tenant } from '../entities/tenant.entity';
 
 @Controller('tenants')
 @UseGuards(PlatformJwtAuthGuard)
@@ -32,46 +27,77 @@ export class TenantController {
   constructor(private tenantService: TenantService) {}
 
   @Get()
-  async findAll(
-    @CurrentUser() user: PlatformUser,
-    @RequestContext() ctx: RequestContextDto,
-  ) {
-    console.log("Request Context:", ctx);
-    if (user.platformRole === PlatformRole.SUPER_ADMIN) {
-      return this.tenantService.getAllTenants();
+  async findAll(@RequestContext() ctx: RequestContextDto) {
+    const tenants = await this.tenantService.getAllTenants(ctx);
+
+    return {
+      success: true,
+      statusCode: 200,
+      message: `List of tenants`,
+      data: tenants,
     }
-    return this.tenantService.getTenantsByUser(user.userId);
   }
 
   @Get(':id')
   async findOne(
+    @RequestContext() ctx: RequestContextDto,
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: PlatformUser,
   ) {
-    return this.tenantService.findByIdForUser(id, user.userId, user.platformRole);
+    const tenant = await this.tenantService.findByIdForUser(ctx, id);
+
+    return {
+      success: true,
+      statusCode: 200,
+      message: `Tenant found`,
+      data: tenant,
+    }
   }
 
   @Post()
-  async create(@Body() dto: CreateTenantDto, @CurrentUser() user: PlatformUser) {
-    const ownerId =
-      user.platformRole === PlatformRole.SUPER_ADMIN ? undefined : user.userId;
-    return this.tenantService.createTenant(dto, ownerId);
+  async create(
+    @RequestContext() ctx: RequestContextDto,
+    @Body() createTenantDto: CreateTenantDto,
+  ) {    
+    const tenant = await this.tenantService.createTenant(ctx, createTenantDto);
+
+    return {
+      success: true,
+      statusCode: 201,
+      message: `Tenant created successfully`,
+      data: tenant,
+    }
   }
 
   @Patch(':id')
   async update(
+    @RequestContext() ctx: RequestContextDto,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateTenantDto,
-    @CurrentUser() user: PlatformUser,
+    @Body() updateTenantDto: UpdateTenantDto,
   ) {
-    return this.tenantService.updateTenant(id, dto, user.userId, user.platformRole);
+
+    const tenant = await this.tenantService.updateTenant(ctx, id, updateTenantDto);
+
+    return {
+      success: true,
+      statusCode: 200,
+      message: `Tenant updated successfully`,
+      data: tenant,
+    }
   }
 
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles(PlatformRole.SUPER_ADMIN)
-  async remove(@Param('id', ParseUUIDPipe) id: string) {
-    await this.tenantService.deleteTenant(id);
-    return { message: 'Tenant deleted successfully' };
+  async remove(
+    @RequestContext() ctx: RequestContextDto,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    await this.tenantService.deleteTenant(ctx, id);
+
+    return {
+      success: true,
+      statusCode: 200,
+      message: `Tenant deleted successfully`,
+    }
   }
 }

@@ -14,6 +14,7 @@ import { getTenantConnectionConfig } from '../../../../database/database.config'
 import { CreateTenantDto } from '../dto/create-tenant.dto';
 import { UpdateTenantDto } from '../dto/update-tenant.dto';
 import { PlatformRole } from '~/platform/users/enums/platform-role.enum';
+import { RequestContextDto } from '~/common/dto/request-context.dto';
 
 @Injectable()
 export class TenantService {
@@ -30,16 +31,21 @@ export class TenantService {
    * Creates a tenant. If ownerId is provided the user automatically
    * receives an OWNER membership for the new tenant.
    */
-  async createTenant(dto: CreateTenantDto, ownerId?: string): Promise<Tenant> {
-    const { name, slug, domain } = dto;
-    const existing = await this.tenantRepository.findOne({ where: { slug } });
+  async createTenant(
+    ctx: RequestContextDto,
+    dto: CreateTenantDto,
+  ): Promise<Tenant> {
+    const { user } = ctx;
+    const ownerId = user?.role === PlatformRole.SUPER_ADMIN ? undefined : user?.id ?? '';
+    
+    const existing = await this.tenantRepository.findOne({ where: { slug: dto.slug } });
     if (existing) {
       throw new ConflictException('Tenant slug already exists');
     }
 
-    const schemaName = `${Key.TenantSchemaPrefix}${slug.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+    const schemaName = `${Key.TenantSchemaPrefix}${dto.slug.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
 
-    const tenant = this.tenantRepository.create({ name, slug, domain, schemaName });
+    const tenant = this.tenantRepository.create({ ...dto, schemaName });
     await this.tenantRepository.save(tenant);
 
     await this.createTenantSchema(schemaName);
@@ -57,12 +63,16 @@ export class TenantService {
     return tenant;
   }
 
-  async getAllTenants(): Promise<Tenant[]> {
+  async getAllTenants(ctx: RequestContextDto): Promise<Tenant[]> {
+    if (ctx.user?.role !== PlatformRole.SUPER_ADMIN) {
+      return this.getTenantsByUser(ctx, ctx.user?.id ?? '');
+    }
+
     return this.tenantRepository.find();
   }
 
   /** Returns only tenants where the user has any membership. */
-  async getTenantsByUser(userId: string): Promise<Tenant[]> {
+  async getTenantsByUser(_ctx: RequestContextDto, userId: string): Promise<Tenant[]> {
     const memberships = await this.membershipRepository.find({
       where: { userId },
     });
@@ -71,7 +81,7 @@ export class TenantService {
     return this.tenantRepository.find({ where: { id: In(tenantIds) } });
   }
 
-  async findById(id: string): Promise<Tenant | null> {
+  async findById(ctx: RequestContextDto, id: string): Promise<Tenant | null> {
     return this.tenantRepository.findOne({ where: { id } });
   }
 
@@ -84,18 +94,17 @@ export class TenantService {
    * membership in that tenant.
    */
   async findByIdForUser(
+    ctx: RequestContextDto,
     id: string,
-    userId: string,
-    role: PlatformRole,
   ): Promise<Tenant> {
-    const tenant = await this.findById(id);
+    const tenant = await this.findById(ctx, id);
     if (!tenant) {
       throw new NotFoundException('Tenant not found');
     }
-    if (role === PlatformRole.SUPER_ADMIN) return tenant;
+    if (ctx.user?.role === PlatformRole.SUPER_ADMIN) return tenant;
 
     const membership = await this.membershipRepository.findOne({
-      where: { tenantId: id, userId },
+      where: { tenantId: id, userId: ctx.user?.id ?? '' },
     });
     if (!membership) {
       throw new ForbiddenException('Access denied');
@@ -104,19 +113,19 @@ export class TenantService {
   }
 
   async updateTenant(
+    ctx: RequestContextDto,
     id: string,
     dto: UpdateTenantDto,
-    requesterId: string,
-    requesterRole: PlatformRole,
   ): Promise<Tenant> {
-    const tenant = await this.findById(id);
+    const { user } = ctx;
+    const tenant = await this.findById(ctx, id);
     if (!tenant) {
       throw new NotFoundException('Tenant not found');
     }
 
-    if (requesterRole !== PlatformRole.SUPER_ADMIN) {
+    if (user?.role !== PlatformRole.SUPER_ADMIN) {
       const membership = await this.membershipRepository.findOne({
-        where: { tenantId: id, userId: requesterId, role: MembershipRole.OWNER },
+        where: { tenantId: id, userId: user?.id ?? '', role: MembershipRole.OWNER },
       });
       if (!membership) {
         throw new ForbiddenException('Only the tenant owner or a super admin can update this tenant');
@@ -127,8 +136,8 @@ export class TenantService {
     return this.tenantRepository.save(tenant);
   }
 
-  async deleteTenant(id: string): Promise<void> {
-    const tenant = await this.findById(id);
+  async deleteTenant(ctx: RequestContextDto, id: string): Promise<void> {
+    const tenant = await this.findById(ctx, id);
     if (!tenant) {
       throw new ConflictException('Tenant not found');
     }
