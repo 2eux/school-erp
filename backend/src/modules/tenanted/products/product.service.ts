@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { TenantConnectionService } from '../../../tenancy/tenant-connection.service';
+import { TenantConnectionService } from '~/tenancy/tenant-connection.service';
 import { Product } from './entities/product.entity';
 
 @Injectable()

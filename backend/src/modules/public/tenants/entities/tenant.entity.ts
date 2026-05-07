@@ -7,7 +7,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { TenantStatus } from '../enums/tenant-status.enum';
-import { Membership } from '../../memberships/entities/membership.entity';
+import { Membership } from '~/platform/memberships/entities/membership.entity';
 
 @Entity('tenants', { schema: 'public' })
 export class Tenant {

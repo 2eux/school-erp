@@ -12,11 +12,13 @@ import {
 import { TenantService } from '../services/tenant.service';
 import { CreateTenantDto } from '../dto/create-tenant.dto';
 import { UpdateTenantDto } from '../dto/update-tenant.dto';
-import { PlatformJwtAuthGuard } from '../../../../common/guards/platform-jwt-auth.guard';
-import { RolesGuard } from '../../../../common/guards/roles.guard';
-import { Roles } from '../../../../common/decorators/roles.decorator';
-import { CurrentUser } from '../../../../common/decorators/current-user.decorator';
-import { PlatformRole } from '../../users/enums/platform-role.enum';
+import { PlatformJwtAuthGuard } from '~/common/guards/platform-jwt-auth.guard';
+import { RolesGuard } from '~/common/guards/roles.guard';
+import { Roles } from '~/common/decorators/roles.decorator';
+import { CurrentUser } from '~/common/decorators/current-user.decorator';
+import { PlatformRole } from '~/platform/users/enums/platform-role.enum';
+import { RequestContext } from '~/common/decorators/request-context.decorator';
+import { RequestContextDto } from '~/common/dto/request-context.dto';
 
 interface PlatformUser {
   userId: string;
@@ -30,7 +32,11 @@ export class TenantController {
   constructor(private tenantService: TenantService) {}
 
   @Get()
-  async findAll(@CurrentUser() user: PlatformUser) {
+  async findAll(
+    @CurrentUser() user: PlatformUser,
+    @RequestContext() ctx: RequestContextDto,
+  ) {
+    console.log("Request Context:", ctx);
     if (user.platformRole === PlatformRole.SUPER_ADMIN) {
       return this.tenantService.getAllTenants();
     }

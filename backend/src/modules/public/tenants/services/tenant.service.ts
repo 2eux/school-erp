@@ -7,12 +7,12 @@ import {
 import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
 import { Repository, DataSource, In } from 'typeorm';
 import { Tenant } from '../entities/tenant.entity';
-import { Membership } from '../../memberships/entities/membership.entity';
-import { MembershipRole } from '../../memberships/enums/membership-role.enum';
+import { Membership } from '~/platform/memberships/entities/membership.entity';
+import { MembershipRole } from '~/platform/memberships/enums/membership-role.enum';
 import { getTenantConnectionConfig } from '../../../../database/database.config';
 import { CreateTenantDto } from '../dto/create-tenant.dto';
 import { UpdateTenantDto } from '../dto/update-tenant.dto';
-import { PlatformRole } from '../../users/enums/platform-role.enum';
+import { PlatformRole } from '~/platform/users/enums/platform-role.enum';
 
 @Injectable()
 export class TenantService {

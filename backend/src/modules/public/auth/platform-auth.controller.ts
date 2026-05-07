@@ -2,8 +2,8 @@ import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
 import { PlatformAuthService } from './platform-auth.service';
 import { PlatformRegisterDto } from './dto/platform-register.dto';
 import { PlatformLoginDto } from './dto/platform-login.dto';
-import { PlatformJwtAuthGuard } from '../../../common/guards/platform-jwt-auth.guard';
-import { CurrentUser } from '../../../common/decorators/current-user.decorator';
+import { PlatformJwtAuthGuard } from '~/common/guards/platform-jwt-auth.guard';
+import { CurrentUser } from '~/common/decorators/current-user.decorator';
 
 @Controller('platform/auth')
 export class PlatformAuthController {

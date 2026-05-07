@@ -11,7 +11,7 @@ import {
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
-import type { RequestWithTenant } from '../../../tenancy/tenant.middleware';
+import type { RequestWithTenant } from '~/tenancy/tenant.middleware';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';

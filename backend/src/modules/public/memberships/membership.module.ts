@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Membership } from './entities/membership.entity';
 import { MembershipService } from './services/membership.service';
 import { MembershipController } from './controllers/membership.controller';
-import { TenantModule } from '../tenants/tenant.module';
+import { TenantModule } from '~/platform/tenants/tenant.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Membership]), TenantModule],

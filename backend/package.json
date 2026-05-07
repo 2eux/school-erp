@@ -77,6 +77,14 @@
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
+    "moduleNameMapper": {
+      "^~/common/(.*)$": "<rootDir>/common/$1",
+      "^~/config$": "<rootDir>/config",
+      "^~/utils/(.*)$": "<rootDir>/utils/$1",
+      "^~/tenancy/(.*)$": "<rootDir>/tenancy/$1",
+      "^~/platform/(.*)$": "<rootDir>/modules/public/$1",
+      "^~/tenanted/(.*)$": "<rootDir>/modules/tenanted/$1"
+    },
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ],

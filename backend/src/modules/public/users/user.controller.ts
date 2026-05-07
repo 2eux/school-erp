@@ -13,10 +13,10 @@ import {
 import { UserService } from './user.service.js';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreatePlatformUserDto } from './dto/create-platform-user.dto';
-import { PlatformJwtAuthGuard } from '../../../common/guards/platform-jwt-auth.guard';
-import { RolesGuard } from '../../../common/guards/roles.guard';
-import { Roles } from '../../../common/decorators/roles.decorator';
-import { CurrentUser } from '../../../common/decorators/current-user.decorator';
+import { PlatformJwtAuthGuard } from '~/common/guards/platform-jwt-auth.guard';
+import { RolesGuard } from '~/common/guards/roles.guard';
+import { Roles } from '~/common/decorators/roles.decorator';
+import { CurrentUser } from '~/common/decorators/current-user.decorator';
 import { PlatformRole } from './enums/platform-role.enum';
 
 interface PlatformUser {

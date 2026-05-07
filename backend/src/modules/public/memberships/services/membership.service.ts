@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 import { Membership } from '../entities/membership.entity';
 import { CreateMembershipDto } from '../dto/create-membership.dto';
 import { UpdateMembershipRoleDto } from '../dto/update-membership-role.dto';
-import { TenantService } from '../../tenants/services/tenant.service';
+import { TenantService } from '~/platform/tenants/services/tenant.service';
 import { MembershipRole } from '../enums/membership-role.enum';
 
 @Injectable()

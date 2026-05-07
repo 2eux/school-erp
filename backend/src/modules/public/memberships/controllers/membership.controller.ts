@@ -11,10 +11,10 @@ import {
 import { MembershipService } from '../services/membership.service';
 import { CreateMembershipDto } from '../dto/create-membership.dto';
 import { UpdateMembershipRoleDto } from '../dto/update-membership-role.dto';
-import { PlatformJwtAuthGuard } from '../../../../common/guards/platform-jwt-auth.guard';
-import { RolesGuard } from '../../../../common/guards/roles.guard';
-import { Roles } from '../../../../common/decorators/roles.decorator';
-import { PlatformRole } from '../../users/enums/platform-role.enum';
+import { PlatformJwtAuthGuard } from '~/common/guards/platform-jwt-auth.guard';
+import { RolesGuard } from '~/common/guards/roles.guard';
+import { Roles } from '~/common/decorators/roles.decorator';
+import { PlatformRole } from '~/platform/users/enums/platform-role.enum';
 
 @Controller('memberships')
 @UseGuards(PlatformJwtAuthGuard)
