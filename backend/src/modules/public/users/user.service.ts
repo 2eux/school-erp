@@ -1,30 +1,52 @@
 import {
-  Injectable,
-  ForbiddenException,
-  NotFoundException,
   ConflictException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User } from './entities/user.entity';
+import { Repository } from 'typeorm';
+import { RequestContextDto } from '~/common/dto/request-context.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { FilterUserDto } from './dto/filter-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { CreatePlatformUserDto } from './dto/create-platform-user.dto';
+import { User } from './entities/user.entity';
 import { PlatformRole } from './enums/platform-role.enum';
+import { UserStatus } from './enums/user-status.enum';
 
 @Injectable()
 export class UserService {
+  private logger = new Logger(UserService.name)
+
+
   constructor(
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly userRepo: Repository<User>,
   ) {}
 
-  findAll(): Promise<User[]> {
-    return this.userRepository.find();
+  async findAll(ctx: RequestContextDto, filterUserDto: FilterUserDto): Promise<User[]> {
+    this.logger.log(`${this.findAll.name} Service Called`)
+
+    const { id, firstName, lastName, email, role } = filterUserDto
+    const reqQuery: any = { id, firstName, lastName, email, role }
+
+    return this.userRepo.find({ where: reqQuery })
   }
 
-  async createPlatformUser(dto: CreatePlatformUserDto): Promise<User> {
-    const existing = await this.userRepository.findOne({
+  async findById(_ctx: RequestContextDto, id: string): Promise<User> {
+    const user = await this.userRepo.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
+
+  async createPlatformUser(ctx: RequestContextDto, dto: CreateUserDto): Promise<User> {
+    this.logger.log(`${this.createPlatformUser.name} Service Called`)
+
+    const existing = await this.userRepo.findOne({
       where: { email: dto.email },
     });
     if (existing) {
@@ -32,53 +54,44 @@ export class UserService {
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
-    const user = this.userRepository.create({
+    const user = this.userRepo.create({
       email: dto.email,
       password: hashedPassword,
       firstName: dto.firstName,
       lastName: dto.lastName,
-      platformRole: dto.platformRole ?? PlatformRole.USER,
-      isActive: dto.isActive ?? true,
+      role: dto.role ?? PlatformRole.USER,
+      status: dto.status ?? UserStatus.ACTIVE,
     });
-    await this.userRepository.save(user);
-    return this.findById(user.id);
+    await this.userRepo.save(user);
+    return this.findById(ctx, user.id);
   }
 
-  async findById(id: string): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { id } });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    return user;
-  }
+  async update(ctx: RequestContextDto, targetId: string, dto: UpdateUserDto): Promise<User> {
+    this.logger.log(`${this.update.name} Service Called`)
 
-  async update(
-    requesterId: string,
-    requesterRole: PlatformRole,
-    targetId: string,
-    dto: UpdateUserDto,
-  ): Promise<User> {
-    const isSelf = requesterId === targetId;
-    const isSuperAdmin = requesterRole === PlatformRole.SUPER_ADMIN;
+    const isSelf = ctx.user?.id === targetId;
+    const isSuperAdmin = ctx.user?.role === PlatformRole.SUPER_ADMIN;
 
     if (!isSelf && !isSuperAdmin) {
       throw new ForbiddenException('You can only update your own profile');
     }
 
-    // Only super admin can change platformRole or isActive
+    // Only super admin can change platformRole or status
     if (!isSuperAdmin) {
-      delete dto.platformRole;
-      delete dto.isActive;
+      delete dto.role;
+      delete dto.status;
     }
 
-    const user = await this.findById(targetId);
+    const user = await this.findById(ctx, targetId);
     Object.assign(user, dto);
-    return this.userRepository.save(user);
+    return this.userRepo.save(user);
   }
 
-  async remove(id: string): Promise<void> {
-    await this.findById(id);
-    await this.userRepository.delete(id);
+  async remove(ctx: RequestContextDto, targetId: string): Promise<void> {
+    this.logger.log(`${this.remove.name} Service Called`)
+
+    await this.findById(ctx, targetId);
+    await this.userRepo.delete(targetId);
   }
 }
 

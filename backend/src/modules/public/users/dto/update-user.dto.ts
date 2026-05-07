@@ -1,5 +1,6 @@
-import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { PlatformRole } from '../enums/platform-role.enum';
+import { UserStatus } from '../enums/user-status.enum';
 
 export class UpdateUserDto {
   @IsOptional()
@@ -12,9 +13,9 @@ export class UpdateUserDto {
 
   @IsOptional()
   @IsEnum(PlatformRole)
-  platformRole?: PlatformRole;
+  role?: PlatformRole;
 
   @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
+  @IsEnum(UserStatus)
+  status?: UserStatus;
 }

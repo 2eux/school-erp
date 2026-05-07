@@ -1,5 +1,4 @@
 import {
-  IsBoolean,
   IsDefined,
   IsEmail,
   IsEnum,
@@ -9,8 +8,9 @@ import {
   MinLength,
 } from 'class-validator';
 import { PlatformRole } from '../enums/platform-role.enum';
+import { UserStatus } from '../enums/user-status.enum';
 
-export class CreatePlatformUserDto {
+export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
   @IsDefined()
@@ -33,9 +33,9 @@ export class CreatePlatformUserDto {
 
   @IsOptional()
   @IsEnum(PlatformRole)
-  platformRole?: PlatformRole;
+  role?: PlatformRole;
 
   @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
+  @IsEnum(UserStatus)
+  status?: UserStatus;
 }

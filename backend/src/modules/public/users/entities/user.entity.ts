@@ -1,18 +1,22 @@
+import { Expose } from 'class-transformer';
 import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
+  AfterInsert,
   AfterLoad,
+  AfterRemove,
+  AfterUpdate,
   BeforeInsert,
   BeforeUpdate,
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
   OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { PlatformRole } from '../enums/platform-role.enum';
-import { Expose } from 'class-transformer';
-import { Membership } from '../../memberships/entities/membership.entity';
-import type { Tenant } from '../../tenants/entities/tenant.entity';
+import { UserStatus } from '../enums/user-status.enum';
+import { Membership } from '~/platform/memberships/entities/membership.entity';
 
 @Entity('users', { schema: 'public' })
 export class User {
@@ -47,18 +51,26 @@ export class User {
     type: 'enum',
     enum: PlatformRole,
     default: PlatformRole.USER,
-    name: 'platform_role',
+    name: 'role',
   })
-  platformRole: PlatformRole;
+  role: PlatformRole;
 
-  @Column({ default: true, name: 'is_active' })
-  isActive: boolean;
+  @Column({
+    type: 'enum',
+    enum: UserStatus,
+    default: UserStatus.ACTIVE,
+    name: 'status',
+  })
+  status: UserStatus;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at' })
+  deletedAt?: Date
 
   @OneToMany(() => Membership, (membership) => membership.user)
   memberships: Membership[];
@@ -71,5 +83,20 @@ export class User {
       (p) => p != null && String(p).trim() !== '',
     );
     this.fullName = parts.join(' ');
+  }
+
+  @AfterInsert()
+  logInsert() {
+    console.log(`User Inserted #ID: ${this.id}`)
+  }
+
+  @AfterUpdate()
+  logUpdate() {
+    console.log(`User Updated #ID: ${this.id}`)
+  }
+
+  @AfterRemove()
+  logRemove() {
+    console.log(`User Removed`)
   }
 }

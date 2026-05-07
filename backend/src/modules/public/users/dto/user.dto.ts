@@ -1,5 +1,6 @@
 import { Expose } from 'class-transformer'
 import { PlatformRole } from '../enums/platform-role.enum'
+import { UserStatus } from '../enums/user-status.enum'
 
 export class UserDto {
   @Expose()
@@ -9,5 +10,8 @@ export class UserDto {
   email: string
 
   @Expose()
-  platformRole: PlatformRole
+  role: PlatformRole
+
+  @Expose()
+  status: UserStatus
 }

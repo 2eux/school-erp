@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { User } from '~/platform/users/entities/user.entity';
+import { UserStatus } from '~/platform/users/enums/user-status.enum';
 import { PlatformRegisterDto } from './dto/platform-register.dto';
 import { PlatformLoginDto } from './dto/platform-login.dto';
 
@@ -42,14 +43,14 @@ export class PlatformAuthService {
   async login(dto: PlatformLoginDto) {
     const user = await this.userRepository.findOne({
       where: { email: dto.email },
-      select: ['id', 'email', 'password', 'firstName', 'lastName', 'platformRole', 'isActive'],
+      select: ['id', 'email', 'password', 'firstName', 'lastName', 'role', 'status'],
     });
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    if (!user.isActive) {
-      throw new UnauthorizedException('Account is inactive');
+    if (user.status !== UserStatus.ACTIVE) {
+      throw new UnauthorizedException(`Account is ${user.status}`);
     }
 
     const isValid = await bcrypt.compare(dto.password, user.password);
@@ -75,7 +76,8 @@ export class PlatformAuthService {
     const payload = {
       sub: user.id,
       email: user.email,
-      platformRole: user.platformRole,
+      role: user.role,
+      status: user.status,
     };
     return {
       access_token: this.jwtService.sign(payload),
@@ -86,7 +88,8 @@ export class PlatformAuthService {
         lastName: user.lastName,
         fullName: user.fullName,
         name: user.name,
-        platformRole: user.platformRole,
+        role: user.role,
+        status: user.status,
       },
     };
   }

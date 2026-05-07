@@ -1,75 +1,115 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Delete,
-  Param,
   Body,
-  ParseUUIDPipe,
-  UseGuards,
+  Controller,
+  Delete,
   ForbiddenException,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
-import { UserService } from './user.service.js';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { CreatePlatformUserDto } from './dto/create-platform-user.dto';
+import { RequestContext } from '~/common/decorators/request-context.decorator';
+import { Roles } from '~/common/decorators/roles.decorator';
+import { RequestContextDto } from '~/common/dto/request-context.dto';
 import { PlatformJwtAuthGuard } from '~/common/guards/platform-jwt-auth.guard';
 import { RolesGuard } from '~/common/guards/roles.guard';
-import { Roles } from '~/common/decorators/roles.decorator';
-import { CurrentUser } from '~/common/decorators/current-user.decorator';
+import { CreateUserDto } from './dto/create-user.dto';
+import { FilterUserDto } from './dto/filter-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { PlatformRole } from './enums/platform-role.enum';
+import { UserService } from './user.service';
 
-interface PlatformUser {
-  userId: string;
-  email: string;
-  platformRole: PlatformRole;
-}
 
 @Controller('platform/users')
 @UseGuards(PlatformJwtAuthGuard)
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @Get()
   @UseGuards(RolesGuard)
   @Roles(PlatformRole.SUPER_ADMIN)
-  findAll() {
-    return this.userService.findAll();
+  async findAll(
+    @RequestContext() ctx: RequestContextDto,
+    @Query() filterUserDto: FilterUserDto
+  ) {
+    const users = await this.userService.findAll(ctx, filterUserDto)
+
+    return {
+      success: true,
+      statusCode: 200,
+      message: `List of users`,
+      data: users,
+    }
   }
 
   @Post()
   @UseGuards(RolesGuard)
   @Roles(PlatformRole.SUPER_ADMIN)
-  create(@Body() dto: CreatePlatformUserDto) {
-    return this.userService.createPlatformUser(dto);
+  async create(
+    @RequestContext() ctx: RequestContextDto,
+    @Body() createUserDto: CreateUserDto
+  ) {
+    const user = await this.userService.createPlatformUser(ctx, createUserDto);
+
+    return {
+      success: true,
+      statusCode: 201,
+      message: `User created. ID: ${user.id}`,
+      data: user,
+    }
   }
 
   @Get(':id')
-  findOne(
+  async findOne(
+    @RequestContext() ctx: RequestContextDto,
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: PlatformUser,
   ) {
-    if (user.platformRole !== PlatformRole.SUPER_ADMIN && user.userId !== id) {
+    if (ctx.user?.role !== PlatformRole.SUPER_ADMIN && ctx.user?.id !== id) {
       throw new ForbiddenException('Access denied');
     }
-    return this.userService.findById(id);
+    const user = await this.userService.findById(ctx, id);
+
+    return {
+      success: true,
+      statusCode: 200,
+      message: `User found. ID: ${user.id}`,
+      data: user,
+    }
   }
 
   @Patch(':id')
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateUserDto,
-    @CurrentUser() user: PlatformUser,
+  async update(
+    @RequestContext() ctx: RequestContextDto,
+    @Param('id', ParseUUIDPipe) targetId: string,
+    @Body() updateUserDto: UpdateUserDto,
   ) {
-    return this.userService.update(user.userId, user.platformRole, id, dto);
+    const user = await this.userService.update(ctx, targetId, updateUserDto);
+
+    return {
+      success: true,
+      statusCode: 200,
+      message: `User updated. ID: ${user.id}`,
+      data: user,
+    }
   }
 
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles(PlatformRole.SUPER_ADMIN)
-  async remove(@Param('id', ParseUUIDPipe) id: string) {
-    await this.userService.remove(id);
-    return { message: 'User deleted successfully' };
+  async remove(
+    @RequestContext() ctx: RequestContextDto,
+    @Param('id', ParseUUIDPipe) targetId: string,
+  ) {
+    await this.userService.remove(ctx, targetId);
+
+    return {
+      success: true,
+      statusCode: 200,
+      message: `User deleted. ID: ${targetId}`,
+    }
   }
 }
 
