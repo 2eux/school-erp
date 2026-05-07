@@ -1,0 +1,26 @@
+### Register a User
+POST http://localhost:3000/auth/register
+X-Tenant-ID: acme
+Content-Type: application/json
+
+{
+  "email": "john@acme.com",
+  "password": "SecurePass123!",
+  "name": "John Doe"
+}
+
+### Login
+POST http://localhost:3000/auth/login
+X-Tenant-ID: acme
+Content-Type: application/json
+
+{
+  "email": "john@acme.com",
+  "password": "SecurePass123!"
+}
+
+
+### Get User Profile
+GET http://localhost:3000/auth/profile
+X-Tenant-ID: acme
+Authorization: Bearer <jwt-token>

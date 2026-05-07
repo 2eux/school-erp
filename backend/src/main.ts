@@ -1,8 +1,9 @@
-import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { NestFactory, Reflector } from '@nestjs/core';
+import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { AppConfig } from './config';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -11,9 +12,19 @@ async function bootstrap() {
   
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
-    forbidNonWhitelisted: true,
     transform: true,
+    skipUndefinedProperties: true,
+    // forbidNonWhitelisted: true,
   }));
+
+  app.useGlobalFilters(new GlobalExceptionFilter());
+
+  app.useGlobalInterceptors(
+    new ClassSerializerInterceptor(app.get(Reflector), {
+      enableImplicitConversion: true,
+    }),
+  );
+
   
   app.enableCors({
     origin: '*',
