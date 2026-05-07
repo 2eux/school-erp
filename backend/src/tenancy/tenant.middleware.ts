@@ -1,9 +1,8 @@
-import { Injectable, NestMiddleware, BadRequestException } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
-import { TenantService } from '../modules/public/tenants/services/tenant.service';
-import { TenantStatus } from 'src/modules/public/tenants/enums/tenant-status.enum';
-import { ConfigService } from '@nestjs/config';
-
+import { BadRequestException, Injectable, NestMiddleware } from '@nestjs/common';
+import { NextFunction, Request, Response } from 'express';
+import { Key } from '~/common/enums/keys.enum';
+import { TenantStatus } from '~/platform/tenants/enums/tenant-status.enum';
+import { TenantService } from '~/platform/tenants/services/tenant.service';
 
 export interface RequestWithTenant extends Request {
   tenantId?: string;
@@ -14,10 +13,7 @@ export interface RequestWithTenant extends Request {
 
 @Injectable()
 export class TenantMiddleware implements NestMiddleware {
-  constructor(
-    private tenantService: TenantService, 
-    private configService: ConfigService,
-  ) {}
+  constructor(private tenantService: TenantService) {}
 
   async use(req: RequestWithTenant, res: Response, next: NextFunction) {
     const slug = this.extractSlug(req);
@@ -39,12 +35,8 @@ export class TenantMiddleware implements NestMiddleware {
   }
 
   private extractSlug(req: Request): string | null {
-    // Extract from header (X-Tenant-ID) - priority method
-    const appConfig = this.configService.get('app');
-    if (!appConfig?.tenantHeaderName) {
-      throw new Error('Tenant header key is not configured');
-    }
-    const tenantSlug = req.headers[appConfig.tenantHeaderName.toLowerCase()] as string;
+    // Extract from header (e.g. x-tenant-id) — priority method
+    const tenantSlug = req.headers[Key.TenantKeyHeader.toLowerCase()] as string;
     if (tenantSlug) return tenantSlug;
 
     // Extract from domain

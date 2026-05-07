@@ -1,7 +1,6 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
 
 export const PUBLIC_SCHEMA = 'public';
-export const TENANT_SCHEMA_PREFIX = 'tenant_';
 export const MAX_TENANT_SOURCES = 80; // Tune based on PG max_connections
 
 export const publicDataSourceOptions: DataSourceOptions = {

@@ -9,6 +9,7 @@ import { Repository, DataSource, In } from 'typeorm';
 import { Tenant } from '../entities/tenant.entity';
 import { Membership } from '~/platform/memberships/entities/membership.entity';
 import { MembershipRole } from '~/platform/memberships/enums/membership-role.enum';
+import { Key } from '~/common/enums/keys.enum';
 import { getTenantConnectionConfig } from '../../../../database/database.config';
 import { CreateTenantDto } from '../dto/create-tenant.dto';
 import { UpdateTenantDto } from '../dto/update-tenant.dto';
@@ -36,7 +37,7 @@ export class TenantService {
       throw new ConflictException('Tenant slug already exists');
     }
 
-    const schemaName = `tenant_${slug.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+    const schemaName = `${Key.TenantSchemaPrefix}${slug.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
 
     const tenant = this.tenantRepository.create({ name, slug, domain, schemaName });
     await this.tenantRepository.save(tenant);
