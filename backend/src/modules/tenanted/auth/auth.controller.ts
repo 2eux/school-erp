@@ -16,7 +16,8 @@ export class AuthController {
       req.tenantId!,
       dto.email,
       dto.password,
-      dto.name,
+      dto.firstName,
+      dto.lastName,
     );
   }
 
@@ -30,9 +31,9 @@ export class AuthController {
     );
   }
 
-  @Get('profile')
+  @Get('me')
   @UseGuards(JwtAuthGuard)
-  async getProfile(@Req() req: any) {
-    return this.authService.getUserProfile(req.user.schemaName, req.user.userId);
+  async getMe(@Req() req: any) {
+    return this.authService.getMe(req.user.schemaName, req.user.userId);
   }
 }

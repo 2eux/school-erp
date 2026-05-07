@@ -14,6 +14,7 @@ import { TenantMiddleware } from '~/tenancy/tenant.middleware';
 import { MembershipModule } from '~/platform/memberships/membership.module';
 import { UserModule } from '~/platform/users/user.module';
 import { ProductModule } from '~/tenanted/products/product.module';
+import { TenantUserModule } from '~/tenanted/users/user.module';
 import { TenantModule } from '~/platform/tenants/tenant.module';
 
 const nodeEnv = process.env.NODE_ENV ?? 'development';
@@ -36,6 +37,7 @@ const envFilePath = ['.env', `.env.${nodeEnv}`];
     CatModule,
     TaskModule,
     ProductModule,
+    TenantUserModule,
     MembershipModule,
   ],
   controllers: [AppController],

@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/co
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { TenantConnectionService } from '~/tenancy/tenant-connection.service';
-import { User } from './entities/user.entity';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -16,7 +16,8 @@ export class AuthService {
     tenantId: string,
     email: string,
     password: string,
-    name: string,
+    firstName: string,
+    lastName: string,
   ) {
     const connection = await this.tenantConnectionService.getTenantConnection(schemaName);
     const userRepo = connection.getRepository(User);
@@ -30,7 +31,8 @@ export class AuthService {
     const user = userRepo.create({
       email,
       password: hashedPassword,
-      name,
+      firstName,
+      lastName,
     });
 
     await userRepo.save(user);
@@ -41,7 +43,18 @@ export class AuthService {
     const connection = await this.tenantConnectionService.getTenantConnection(schemaName);
     const userRepo = connection.getRepository(User);
 
-    const user = await userRepo.findOne({ where: { email } });
+    const user = await userRepo.findOne({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        status: true,
+      },
+    });
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -54,25 +67,7 @@ export class AuthService {
     return this.generateToken(user, tenantId, schemaName);
   }
 
-  private generateToken(user: User, tenantId: string, schemaName: string) {
-    const payload = { 
-      sub: user.id, 
-      email: user.email, 
-      tenantId,
-      schemaName 
-    };
-    
-    return {
-      access_token: this.jwtService.sign(payload),
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-      },
-    };
-  }
-
-  async getUserProfile(schemaName: string, userId: string) {
+  async getMe(schemaName: string, userId: string) {
     const connection = await this.tenantConnectionService.getTenantConnection(schemaName);
     const userRepo = connection.getRepository(User);
 
@@ -83,5 +78,27 @@ export class AuthService {
 
     const { password, ...result } = user;
     return result;
+  }
+
+  private generateToken(user: User, tenantId: string, schemaName: string) {
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      tenantId,
+      schemaName
+    };
+
+    return {
+      access_token: this.jwtService.sign(payload),
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        fullName: user.fullName,
+        role: user.role,
+        status: user.status,
+      },
+    };
   }
 }
