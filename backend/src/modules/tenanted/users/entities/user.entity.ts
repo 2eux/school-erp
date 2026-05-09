@@ -12,6 +12,8 @@ import {
   AfterUpdate,
   AfterRemove,
 } from 'typeorm';
+import { UserRole } from '../enums/user-role.enum';
+import { UserStatus } from '../enums/user-status.enum';
 
 @Entity('users')
 export class User {
@@ -30,12 +32,13 @@ export class User {
   @Column({ name: 'last_name' })
   lastName: string;
 
+  // virtual column
   fullName: string;
 
-  @Column({ default: 'user' })
+  @Column({ type: 'varchar', default: UserRole.USER })
   role: string;
 
-  @Column({ default: 'active' })
+  @Column({ type: 'varchar', default: UserStatus.ACTIVE })
   status: string;
 
   @CreateDateColumn({ name: 'created_at' })

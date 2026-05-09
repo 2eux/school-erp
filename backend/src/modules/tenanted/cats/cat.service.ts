@@ -19,8 +19,11 @@ export class CatService {
 
   async findAll(filterCatDto: FilterCatDto): Promise<Cat[]> {
     const { id, name, breed } = filterCatDto;
-    const reqQuery: any = { id, name, breed };
-    return this.catRepo.findAll({ where: reqQuery, order: { createdAt: 'DESC' } });
+    const where: Record<string, any> = {};
+    if (id !== undefined) where.id = id;
+    if (name !== undefined) where.name = name;
+    if (breed !== undefined) where.breed = breed;
+    return this.catRepo.findAll({ where, order: { createdAt: 'DESC' } });
   }
 
   async findOne(id: string): Promise<Cat> {

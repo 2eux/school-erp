@@ -3,7 +3,6 @@ import {
   DeepPartial,
   FindManyOptions,
   FindOneOptions,
-  FindOptionsOrder,
   FindOptionsWhere,
   ObjectLiteral,
   Repository,

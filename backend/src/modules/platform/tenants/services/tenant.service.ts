@@ -14,6 +14,7 @@ import { MembershipRole } from 'src/modules/platform/memberships/enums/membershi
 import { Key } from '~/common/enums/keys.enum';
 import { TenantConnectionService } from '~/tenancy/tenant-connection.service';
 import { TenantMigrationService } from '~/tenancy/tenant-migration.service';
+import { TenantMiddleware } from '~/tenancy/tenant.middleware';
 import { CreateTenantDto } from '../dto/create-tenant.dto';
 import { UpdateTenantDto } from '../dto/update-tenant.dto';
 import { PlatformRole } from 'src/modules/platform/users/enums/platform-role.enum';
@@ -211,7 +212,9 @@ export class TenantService {
     }
 
     Object.assign(tenant, dto);
-    return this.tenantRepository.save(tenant);
+    const saved = await this.tenantRepository.save(tenant);
+    TenantMiddleware.invalidateCache(tenant.slug);
+    return saved;
   }
 
   async deleteTenant(ctx: RequestContextDto, id: string): Promise<void> {
@@ -229,6 +232,7 @@ export class TenantService {
       await queryRunner.query(`DROP SCHEMA IF EXISTS ${quoted} CASCADE`);
       await queryRunner.manager.delete(Tenant, id);
       await queryRunner.commitTransaction();
+      TenantMiddleware.invalidateCache(tenant.slug);
       this.logger.log(`Tenant "${tenant.slug}" and schema ${tenant.schemaName} deleted`);
     } catch (error) {
       await queryRunner.rollbackTransaction();

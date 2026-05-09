@@ -28,6 +28,12 @@ import { PUBLIC_SCHEMA } from './public.datasource';
           autoLoadEntities: true,
           synchronize: db.sync && !isProduction,
           logging: db.logging,
+          ...(db.ssl ? { ssl: { rejectUnauthorized: false } } : {}),
+          extra: {
+            max: 10,
+            connectionTimeoutMillis: db.connectionTimeout,
+            idleTimeoutMillis: db.idleTimeout,
+          },
         };
       },
     }),

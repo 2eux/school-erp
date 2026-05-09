@@ -17,9 +17,12 @@ export function createTenantPoolDataSourceOptions(
     entities: [tenantedEntitiesGlob],
     synchronize: false,
     logging: db.logging,
+    ...(db.ssl ? { ssl: { rejectUnauthorized: false } } : {}),
     extra: {
       max: db.tenantPoolSize,
       connectionTimeoutMillis: db.connectionTimeout,
+      idleTimeoutMillis: db.idleTimeout,
+      maxLifetimeMillis: db.maxLifetime,
     },
   };
 }

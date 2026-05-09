@@ -10,6 +10,8 @@ import * as bcrypt from 'bcrypt';
 import type { RequestWithTenant } from '~/tenancy/tenant.middleware';
 import { UserRepository } from '../users/user.repository';
 import { User } from '../users/entities/user.entity';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -19,12 +21,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(
-    email: string,
-    password: string,
-    firstName: string,
-    lastName: string,
-  ) {
+  async register(dto: RegisterDto) {
+    const { email, password, firstName, lastName } = dto;
     const existing = await this.userRepo.findByEmail(email);
     if (existing) {
       throw new ConflictException('User already exists');
@@ -41,7 +39,8 @@ export class AuthService {
     return this.generateToken(user);
   }
 
-  async login(email: string, password: string) {
+  async login(dto: LoginDto) {
+    const { email, password } = dto;
     const user = await this.userRepo.findByEmailWithPassword(email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -75,6 +74,7 @@ export class AuthService {
 
     return {
       access_token: this.jwtService.sign(payload),
+      token_type: 'Bearer',
       user: {
         id: user.id,
         email: user.email,

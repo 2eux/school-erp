@@ -9,6 +9,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { FilterUserDto } from './dto/filter-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { UserRole } from './enums/user-role.enum';
+import { UserStatus } from './enums/user-status.enum';
 
 @Injectable()
 export class UserService {
@@ -48,8 +50,8 @@ export class UserService {
       lastName: dto.lastName,
       email: dto.email,
       password: hashedPassword,
-      role: dto.role ?? 'user',
-      status: dto.status ?? 'active',
+      role: dto.role ?? UserRole.USER,
+      status: dto.status ?? UserStatus.ACTIVE,
     });
 
     return this.findById(user.id);

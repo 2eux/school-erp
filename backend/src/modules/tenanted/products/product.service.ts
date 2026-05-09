@@ -11,7 +11,7 @@ export class ProductService {
   }
 
   async findAll(): Promise<Product[]> {
-    return this.productRepo.findAll({ createdAt: 'DESC' } as any);
+    return this.productRepo.findAll({ order: { createdAt: 'DESC' } });
   }
 
   async findOne(id: string): Promise<Product> {
@@ -30,17 +30,6 @@ export class ProductService {
   }
 
   async getProductStats() {
-    const [products, total] = await this.productRepo.findAndCount();
-    const totalValue = products.reduce(
-      (sum, p) => sum + Number(p.price) * p.stock,
-      0,
-    );
-    const totalStock = products.reduce((sum, p) => sum + p.stock, 0);
-
-    return {
-      totalProducts: total,
-      totalStock,
-      totalValue: totalValue.toFixed(2),
-    };
+    return this.productRepo.getStats();
   }
 }

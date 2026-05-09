@@ -1,5 +1,6 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { AppConfig } from './config';
@@ -15,7 +16,7 @@ async function bootstrap() {
     whitelist: true,
     transform: true,
     skipUndefinedProperties: true,
-    // forbidNonWhitelisted: true,
+    forbidNonWhitelisted: true,
   }));
 
   app.useGlobalFilters(new GlobalExceptionFilter());
@@ -26,12 +27,14 @@ async function bootstrap() {
     }),
   );
 
-  
+  app.use(helmet());
+
+  const corsOrigin = process.env.CORS_ORIGIN;
   app.enableCors({
-    origin: true,
+    origin: corsOrigin ? corsOrigin.split(',').map((o) => o.trim()) : true,
     credentials: true,
   });
-  app.use(RequestIdMiddleware)
+  app.use(RequestIdMiddleware);
   
   const configService = app.get(ConfigService);
   const appConfig = configService.get<AppConfig>('app');

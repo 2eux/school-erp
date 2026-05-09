@@ -19,7 +19,7 @@ export class TaskService {
   }
 
   async findAll(): Promise<Task[]> {
-    return this.taskRepo.findAll({ createdAt: 'DESC' } as any);
+    return this.taskRepo.findAll({ order: { createdAt: 'DESC' } });
   }
 
   async findOne(id: string): Promise<Task> {

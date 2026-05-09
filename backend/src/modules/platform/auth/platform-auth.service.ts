@@ -81,13 +81,13 @@ export class PlatformAuthService {
     };
     return {
       access_token: this.jwtService.sign(payload),
+      token_type: 'Bearer',
       user: {
         id: user.id,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
         fullName: user.fullName,
-        name: user.name,
         role: user.role,
         status: user.status,
       },
