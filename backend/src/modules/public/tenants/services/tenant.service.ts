@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   ConflictException,
   NotFoundException,
   ForbiddenException,
@@ -10,7 +11,7 @@ import { Tenant } from '../entities/tenant.entity';
 import { Membership } from '~/platform/memberships/entities/membership.entity';
 import { MembershipRole } from '~/platform/memberships/enums/membership-role.enum';
 import { Key } from '~/common/enums/keys.enum';
-import { getTenantConnectionConfig } from '../../../../database/database.config';
+import { TenantConnectionService } from '~/tenancy/tenant-connection.service';
 import { CreateTenantDto } from '../dto/create-tenant.dto';
 import { UpdateTenantDto } from '../dto/update-tenant.dto';
 import { PlatformRole } from '~/platform/users/enums/platform-role.enum';
@@ -18,6 +19,8 @@ import { RequestContextDto } from '~/common/dto/request-context.dto';
 
 @Injectable()
 export class TenantService {
+  private readonly logger = new Logger(TenantService.name);
+
   constructor(
     @InjectRepository(Tenant)
     private tenantRepository: Repository<Tenant>,
@@ -25,6 +28,7 @@ export class TenantService {
     private membershipRepository: Repository<Membership>,
     @InjectDataSource()
     private dataSource: DataSource,
+    private tenantConnectionService: TenantConnectionService,
   ) {}
 
   /**
@@ -150,10 +154,11 @@ export class TenantService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     try {
-      await queryRunner.query(`CREATE SCHEMA IF NOT EXISTS ${schemaName}`);
-      console.log(`Schema ${schemaName} created successfully`);
+      const quoted = this.quoteIdentifier(schemaName);
+      await queryRunner.query(`CREATE SCHEMA IF NOT EXISTS ${quoted}`);
+      this.logger.log(`Schema ${schemaName} created successfully`);
     } catch (error) {
-      console.error(`Error creating schema ${schemaName}:`, error.message);
+      this.logger.error(`Error creating schema ${schemaName}: ${error.message}`);
       throw error;
     } finally {
       await queryRunner.release();
@@ -161,33 +166,27 @@ export class TenantService {
   }
 
   private async runTenantMigrations(schemaName: string) {
-    const tenantConfig = getTenantConnectionConfig(schemaName);
-    const tenantDataSource = new DataSource(tenantConfig as any);
-    try {
-      await tenantDataSource.initialize();
-      await tenantDataSource.synchronize();
-      console.log(`Migrations completed for schema ${schemaName}`);
-    } catch (error) {
-      console.error(`Error running migrations for ${schemaName}:`, error.message);
-      throw error;
-    } finally {
-      if (tenantDataSource.isInitialized) {
-        await tenantDataSource.destroy();
-      }
-    }
+    // Always synchronize when setting up a new tenant schema,
+    // regardless of DB_SYNC. In production, replace with explicit migrations.
+    await this.tenantConnectionService.synchronizeSchema(schemaName);
   }
 
   private async dropTenantSchema(schemaName: string) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     try {
-      await queryRunner.query(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`);
-      console.log(`Schema ${schemaName} dropped successfully`);
+      const quoted = this.quoteIdentifier(schemaName);
+      await queryRunner.query(`DROP SCHEMA IF EXISTS ${quoted} CASCADE`);
+      this.logger.log(`Schema ${schemaName} dropped successfully`);
     } catch (error) {
-      console.error(`Error dropping schema ${schemaName}:`, error.message);
+      this.logger.error(`Error dropping schema ${schemaName}: ${error.message}`);
       throw error;
     } finally {
       await queryRunner.release();
     }
+  }
+
+  private quoteIdentifier(identifier: string): string {
+    return `"${identifier.replace(/"/g, '""')}"`;
   }
 }

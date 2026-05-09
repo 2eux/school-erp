@@ -1,11 +1,13 @@
 import {
   ConflictException,
+  Inject,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { DataSource, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { TenantConnectionService } from '~/tenancy/tenant-connection.service';
+import { TENANT_DATASOURCE } from '~/tenancy/tenancy.constants';
 import { CreateUserDto } from './dto/create-user.dto';
 import { FilterUserDto } from './dto/filter-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -13,15 +15,15 @@ import { User } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
-  private logger = new Logger(UserService.name);
+  private readonly logger = new Logger(UserService.name);
+  private readonly repo: Repository<User>;
 
-  constructor(private tenantConnectionService: TenantConnectionService) {}
+  constructor(@Inject(TENANT_DATASOURCE) private readonly ds: DataSource) {
+    this.repo = this.ds.getRepository(User);
+  }
 
-  async findAll(schemaName: string, filterUserDto: FilterUserDto): Promise<User[]> {
+  async findAll(filterUserDto: FilterUserDto): Promise<User[]> {
     this.logger.log(`${this.findAll.name} Service Called`);
-
-    const connection = await this.tenantConnectionService.getTenantConnection(schemaName);
-    const userRepo = connection.getRepository(User);
 
     const { id, firstName, lastName, email, role } = filterUserDto;
     const where: any = {};
@@ -31,33 +33,27 @@ export class UserService {
     if (email) where.email = email;
     if (role) where.role = role;
 
-    return userRepo.find({ where });
+    return this.repo.find({ where });
   }
 
-  async findById(schemaName: string, id: string): Promise<User> {
-    const connection = await this.tenantConnectionService.getTenantConnection(schemaName);
-    const userRepo = connection.getRepository(User);
-
-    const user = await userRepo.findOne({ where: { id } });
+  async findById(id: string): Promise<User> {
+    const user = await this.repo.findOne({ where: { id } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
     return user;
   }
 
-  async create(schemaName: string, dto: CreateUserDto): Promise<User> {
+  async create(dto: CreateUserDto): Promise<User> {
     this.logger.log(`${this.create.name} Service Called`);
 
-    const connection = await this.tenantConnectionService.getTenantConnection(schemaName);
-    const userRepo = connection.getRepository(User);
-
-    const existing = await userRepo.findOne({ where: { email: dto.email } });
+    const existing = await this.repo.findOne({ where: { email: dto.email } });
     if (existing) {
       throw new ConflictException('Email already registered');
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
-    const user = userRepo.create({
+    const user = this.repo.create({
       firstName: dto.firstName,
       lastName: dto.lastName,
       email: dto.email,
@@ -66,34 +62,28 @@ export class UserService {
       status: dto.status ?? 'active',
     });
 
-    await userRepo.save(user);
-    return this.findById(schemaName, user.id);
+    await this.repo.save(user);
+    return this.findById(user.id);
   }
 
-  async update(schemaName: string, id: string, dto: UpdateUserDto): Promise<User> {
+  async update(id: string, dto: UpdateUserDto): Promise<User> {
     this.logger.log(`${this.update.name} Service Called`);
 
-    const connection = await this.tenantConnectionService.getTenantConnection(schemaName);
-    const userRepo = connection.getRepository(User);
-
-    const user = await this.findById(schemaName, id);
+    const user = await this.findById(id);
     Object.assign(user, dto);
-    await userRepo.save(user);
-    return this.findById(schemaName, id);
+    await this.repo.save(user);
+    return this.findById(id);
   }
 
-  async remove(schemaName: string, id: string): Promise<void> {
+  async remove(id: string): Promise<void> {
     this.logger.log(`${this.remove.name} Service Called`);
 
-    const connection = await this.tenantConnectionService.getTenantConnection(schemaName);
-    const userRepo = connection.getRepository(User);
-
-    await this.findById(schemaName, id);
-    await userRepo.delete(id);
+    await this.findById(id);
+    await this.repo.delete(id);
   }
 
-  async getProfile(schemaName: string, userId: string) {
-    const user = await this.findById(schemaName, userId);
+  async getProfile(userId: string) {
+    const user = await this.findById(userId);
     const { password, ...result } = user;
     return result;
   }

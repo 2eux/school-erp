@@ -1,49 +1,54 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
+import { DataSource, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { TenantConnectionService } from '~/tenancy/tenant-connection.service';
+import { TENANT_DATASOURCE } from '~/tenancy/tenancy.constants';
+import type { RequestWithTenant } from '~/tenancy/tenant.middleware';
 import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
+  private readonly userRepo: Repository<User>;
+
   constructor(
-    private jwtService: JwtService,
-    private tenantConnectionService: TenantConnectionService,
-  ) {}
+    @Inject(TENANT_DATASOURCE) ds: DataSource,
+    @Inject(REQUEST) private readonly request: RequestWithTenant,
+    private readonly jwtService: JwtService,
+  ) {
+    this.userRepo = ds.getRepository(User);
+  }
 
   async register(
-    schemaName: string,
-    tenantId: string,
     email: string,
     password: string,
     firstName: string,
     lastName: string,
   ) {
-    const connection = await this.tenantConnectionService.getTenantConnection(schemaName);
-    const userRepo = connection.getRepository(User);
-
-    const existing = await userRepo.findOne({ where: { email } });
+    const existing = await this.userRepo.findOne({ where: { email } });
     if (existing) {
       throw new ConflictException('User already exists');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = userRepo.create({
+    const user = this.userRepo.create({
       email,
       password: hashedPassword,
       firstName,
       lastName,
     });
 
-    await userRepo.save(user);
-    return this.generateToken(user, tenantId, schemaName);
+    await this.userRepo.save(user);
+    return this.generateToken(user);
   }
 
-  async login(schemaName: string, tenantId: string, email: string, password: string) {
-    const connection = await this.tenantConnectionService.getTenantConnection(schemaName);
-    const userRepo = connection.getRepository(User);
-
-    const user = await userRepo.findOne({
+  async login(email: string, password: string) {
+    const user = await this.userRepo.findOne({
       where: { email },
       select: {
         id: true,
@@ -64,14 +69,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    return this.generateToken(user, tenantId, schemaName);
+    return this.generateToken(user);
   }
 
-  async getMe(schemaName: string, userId: string) {
-    const connection = await this.tenantConnectionService.getTenantConnection(schemaName);
-    const userRepo = connection.getRepository(User);
-
-    const user = await userRepo.findOne({ where: { id: userId } });
+  async getMe(userId: string) {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
@@ -80,12 +82,12 @@ export class AuthService {
     return result;
   }
 
-  private generateToken(user: User, tenantId: string, schemaName: string) {
+  private generateToken(user: User) {
     const payload = {
       sub: user.id,
       email: user.email,
-      tenantId,
-      schemaName
+      tenantId: this.request.tenantId,
+      schemaName: this.request.tenantSchema,
     };
 
     return {

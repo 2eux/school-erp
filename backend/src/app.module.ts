@@ -6,8 +6,8 @@ import { configLoaders, envValidationSchema } from './config';
 import { CatModule } from './modules/tenanted/cats/cat.module';
 import { HealthModule } from './shared/health/health.module';
 import { TaskModule } from './modules/tenanted/tasks/task.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { getMasterDbConfig } from './database/database.config';
+import { DatabaseModule } from './database/database.module';
+import { TenancyModule } from './tenancy/tenancy.module';
 import { AuthModule } from './modules/tenanted/auth/auth.module';
 import { PlatformAuthModule } from '~/platform/auth/platform-auth.module';
 import { TenantMiddleware } from '~/tenancy/tenant.middleware';
@@ -28,7 +28,8 @@ const envFilePath = ['.env', `.env.${nodeEnv}`];
       validationSchema: envValidationSchema,
       load: configLoaders,
     }),
-    TypeOrmModule.forRoot(getMasterDbConfig()),
+    DatabaseModule,
+    TenancyModule,
     HealthModule,
     TenantModule,
     PlatformAuthModule,

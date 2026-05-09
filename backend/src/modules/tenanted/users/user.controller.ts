@@ -8,10 +8,8 @@ import {
   Patch,
   Post,
   Query,
-  Req,
   UseGuards,
 } from '@nestjs/common';
-import type { RequestWithTenant } from '~/tenancy/tenant.middleware';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { FilterUserDto } from './dto/filter-user.dto';
@@ -24,11 +22,8 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  async findAll(
-    @Req() req: RequestWithTenant,
-    @Query() filterUserDto: FilterUserDto,
-  ) {
-    const users = await this.userService.findAll(req.tenantSchema!, filterUserDto);
+  async findAll(@Query() filterUserDto: FilterUserDto) {
+    const users = await this.userService.findAll(filterUserDto);
 
     return {
       success: true,
@@ -39,11 +34,8 @@ export class UserController {
   }
 
   @Post()
-  async create(
-    @Req() req: RequestWithTenant,
-    @Body() createUserDto: CreateUserDto,
-  ) {
-    const user = await this.userService.create(req.tenantSchema!, createUserDto);
+  async create(@Body() createUserDto: CreateUserDto) {
+    const user = await this.userService.create(createUserDto);
 
     return {
       success: true,
@@ -54,11 +46,8 @@ export class UserController {
   }
 
   @Get(':id')
-  async findOne(
-    @Req() req: RequestWithTenant,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
-    const user = await this.userService.findById(req.tenantSchema!, id);
+  async findOne(@Param('id', ParseUUIDPipe) id: string) {
+    const user = await this.userService.findById(id);
 
     return {
       success: true,
@@ -70,11 +59,10 @@ export class UserController {
 
   @Patch(':id')
   async update(
-    @Req() req: RequestWithTenant,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    const user = await this.userService.update(req.tenantSchema!, id, updateUserDto);
+    const user = await this.userService.update(id, updateUserDto);
 
     return {
       success: true,
@@ -85,11 +73,8 @@ export class UserController {
   }
 
   @Delete(':id')
-  async remove(
-    @Req() req: RequestWithTenant,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
-    await this.userService.remove(req.tenantSchema!, id);
+  async remove(@Param('id', ParseUUIDPipe) id: string) {
+    await this.userService.remove(id);
 
     return {
       success: true,

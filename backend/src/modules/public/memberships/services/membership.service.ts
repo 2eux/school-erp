@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RequestContextDto } from '~/common/dto/request-context.dto';
 import { TenantService } from '~/platform/tenants/services/tenant.service';
+import { UserService } from '~/platform/users/user.service';
 import { CreateMembershipDto } from '../dto/create-membership.dto';
 import { UpdateMembershipRoleDto } from '../dto/update-membership-role.dto';
 import { Membership } from '../entities/membership.entity';
@@ -14,6 +15,7 @@ export class MembershipService {
     @InjectRepository(Membership)
     private readonly membershipRepository: Repository<Membership>,
     private readonly tenantService: TenantService,
+    private readonly userService: UserService,
   ) { }
 
   async create(
@@ -23,6 +25,11 @@ export class MembershipService {
     const tenant = await this.tenantService.findById(ctx, dto.tenantId);
     if (!tenant) {
       throw new NotFoundException('Tenant not found');
+    }
+
+    const user = await this.userService.findById(ctx, dto.userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
 
     const existing = await this.membershipRepository.findOne({
@@ -63,6 +70,10 @@ export class MembershipService {
   }
 
   async findByUserId(ctx: RequestContextDto, userId: string): Promise<Membership[]> {
+    const user = await this.userService.findById(ctx, userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
     return this.membershipRepository.find({
       where: { userId },
       order: { createdAt: 'ASC' },

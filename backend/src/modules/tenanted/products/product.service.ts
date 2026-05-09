@@ -1,65 +1,50 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { TenantConnectionService } from '~/tenancy/tenant-connection.service';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { DataSource, Repository } from 'typeorm';
+import { TENANT_DATASOURCE } from '~/tenancy/tenancy.constants';
 import { Product } from './entities/product.entity';
 
 @Injectable()
 export class ProductService {
-  constructor(private tenantConnectionService: TenantConnectionService) {}
+  private readonly repo: Repository<Product>;
 
-  async create(schemaName: string, productData: Partial<Product>): Promise<Product> {
-    const connection = await this.tenantConnectionService.getTenantConnection(schemaName);
-    const productRepo = connection.getRepository(Product);
-
-    const product = productRepo.create(productData);
-    return productRepo.save(product);
+  constructor(@Inject(TENANT_DATASOURCE) private readonly ds: DataSource) {
+    this.repo = this.ds.getRepository(Product);
   }
 
-  async findAll(schemaName: string): Promise<Product[]> {
-    const connection = await this.tenantConnectionService.getTenantConnection(schemaName);
-    const productRepo = connection.getRepository(Product);
-
-    return productRepo.find({ order: { createdAt: 'DESC' } });
+  async create(productData: Partial<Product>): Promise<Product> {
+    const product = this.repo.create(productData);
+    return this.repo.save(product);
   }
 
-  async findOne(schemaName: string, id: string): Promise<Product> {
-    const connection = await this.tenantConnectionService.getTenantConnection(schemaName);
-    const productRepo = connection.getRepository(Product);
+  async findAll(): Promise<Product[]> {
+    return this.repo.find({ order: { createdAt: 'DESC' } });
+  }
 
-    const product = await productRepo.findOne({ where: { id } });
+  async findOne(id: string): Promise<Product> {
+    const product = await this.repo.findOne({ where: { id } });
     if (!product) {
       throw new NotFoundException('Product not found');
     }
-
     return product;
   }
 
-  async update(schemaName: string, id: string, productData: Partial<Product>): Promise<Product> {
-    const connection = await this.tenantConnectionService.getTenantConnection(schemaName);
-    const productRepo = connection.getRepository(Product);
-
-    const result = await productRepo.update(id, productData);
+  async update(id: string, productData: Partial<Product>): Promise<Product> {
+    const result = await this.repo.update(id, productData);
     if (result.affected === 0) {
       throw new NotFoundException('Product not found');
     }
-
-    return this.findOne(schemaName, id);
+    return this.findOne(id);
   }
 
-  async remove(schemaName: string, id: string): Promise<void> {
-    const connection = await this.tenantConnectionService.getTenantConnection(schemaName);
-    const productRepo = connection.getRepository(Product);
-
-    const result = await productRepo.delete(id);
+  async remove(id: string): Promise<void> {
+    const result = await this.repo.delete(id);
     if (result.affected === 0) {
       throw new NotFoundException('Product not found');
     }
   }
 
-  async getProductStats(schemaName: string) {
-    const connection = await this.tenantConnectionService.getTenantConnection(schemaName);
-    const productRepo = connection.getRepository(Product);
-
-    const [products, total] = await productRepo.findAndCount();
+  async getProductStats() {
+    const [products, total] = await this.repo.findAndCount();
     const totalValue = products.reduce((sum, p) => sum + Number(p.price) * p.stock, 0);
     const totalStock = products.reduce((sum, p) => sum + p.stock, 0);
 

@@ -4,9 +4,10 @@ import { Membership } from './entities/membership.entity';
 import { MembershipService } from './services/membership.service';
 import { MembershipController } from './controllers/membership.controller';
 import { TenantModule } from '~/platform/tenants/tenant.module';
+import { UserModule } from '~/platform/users/user.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Membership]), TenantModule],
+  imports: [TypeOrmModule.forFeature([Membership]), TenantModule, UserModule],
   controllers: [MembershipController],
   providers: [MembershipService],
   exports: [MembershipService],

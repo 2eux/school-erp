@@ -7,13 +7,13 @@ export const publicDataSourceOptions: DataSourceOptions = {
   type: 'postgres',
   host: process.env.DB_HOST,
   port: parseInt(process.env.DB_PORT ?? '5432', 10),
-  username: process.env.DB_USER,
-  password: process.env.DB_PASS,
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  schema: PUBLIC_SCHEMA, 
-  entities: [__dirname + '/../modules/public/**/entities/*.entity{.ts,.js}'], 
+  schema: PUBLIC_SCHEMA,
+  entities: [__dirname + '/../modules/public/**/entities/*.entity{.ts,.js}'],
   migrations: [__dirname + '/../migrations/public/*{.ts,.js}'],
-  synchronize: false
+  synchronize: false,
 };
 
 const publicDataSource = new DataSource(publicDataSourceOptions);

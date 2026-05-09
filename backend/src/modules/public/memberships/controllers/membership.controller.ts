@@ -23,28 +23,26 @@ import { MembershipService } from '../services/membership.service';
 export class MembershipController {
   constructor(private readonly membershipService: MembershipService) {}
 
-  @Post()
-  @UseGuards(RolesGuard)
-  @Roles(PlatformRole.SUPER_ADMIN)
-  async create(
-    @RequestContext() ctx: RequestContextDto,
-    @Body() dto: CreateMembershipDto,
-  ) {
-    const membership = await this.membershipService.create(ctx, dto);
-    return {
-      success: true,
-      statusCode: 201,
-      message: `Membership created successfully`,
-      data: membership,
-    }
-  }
-
   @Get('tenant/:tenantId')
   async findByTenant(
     @RequestContext() ctx: RequestContextDto,
     @Param('tenantId') tenantId: string,
   ) {
     const memberships = await this.membershipService.findByTenantId(ctx, tenantId);
+    return {
+      success: true,
+      statusCode: 200,
+      message: `List of memberships`,
+      data: memberships,
+    }
+  }
+
+  @Get('user/:userId')
+  async findByUser(
+    @RequestContext() ctx: RequestContextDto,
+    @Param('userId') userId: string,
+  ) {
+    const memberships = await this.membershipService.findByUserId(ctx, userId);
     return {
       success: true,
       statusCode: 200,
@@ -74,6 +72,22 @@ export class MembershipController {
       success: true,
       statusCode: 200,
       message: `Membership found`,
+      data: membership,
+    }
+  }
+
+  @Post()
+  @UseGuards(RolesGuard)
+  @Roles(PlatformRole.SUPER_ADMIN)
+  async create(
+    @RequestContext() ctx: RequestContextDto,
+    @Body() dto: CreateMembershipDto,
+  ) {
+    const membership = await this.membershipService.create(ctx, dto);
+    return {
+      success: true,
+      statusCode: 201,
+      message: `Membership created successfully`,
       data: membership,
     }
   }

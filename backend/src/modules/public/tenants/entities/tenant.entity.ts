@@ -15,7 +15,7 @@ export class Tenant {
   id: string;
 
   // Acme Secondary School
-  @Column({ unique: true })
+  @Column()
   name: string;
 
   // 001_acme (alternative to subdomain)

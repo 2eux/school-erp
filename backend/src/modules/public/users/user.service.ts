@@ -76,7 +76,7 @@ export class UserService {
       throw new ForbiddenException('You can only update your own profile');
     }
 
-    // Only super admin can change platformRole or status
+    // Only super admin can change role or status
     if (!isSuperAdmin) {
       delete dto.role;
       delete dto.status;

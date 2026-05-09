@@ -1,30 +1,35 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { DataSource, Repository } from 'typeorm';
+import { TENANT_DATASOURCE } from '~/tenancy/tenancy.constants';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskStatus } from './entities/task-status.enum';
 import { Task } from './entities/task.entity';
-import { TaskRepository } from './task.repository';
 
 @Injectable()
 export class TaskService {
-  constructor(private readonly taskRepo: TaskRepository) {}
+  private readonly repo: Repository<Task>;
+
+  constructor(@Inject(TENANT_DATASOURCE) private readonly ds: DataSource) {
+    this.repo = this.ds.getRepository(Task);
+  }
 
   async create(dto: CreateTaskDto): Promise<Task> {
-    const task = this.taskRepo.create({
+    const task = this.repo.create({
       title: dto.title,
       description: dto.description ?? null,
       status: dto.status ?? TaskStatus.TODO,
       dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
     });
-    return this.taskRepo.save(task);
+    return this.repo.save(task);
   }
 
   async findAll(): Promise<Task[]> {
-    return this.taskRepo.findAllOrdered();
+    return this.repo.find({ order: { createdAt: 'DESC' } });
   }
 
   async findOne(id: string): Promise<Task> {
-    const task = await this.taskRepo.findById(id);
+    const task = await this.repo.findOne({ where: { id } });
     if (!task) {
       throw new NotFoundException(`Task with id "${id}" not found`);
     }
@@ -41,11 +46,11 @@ export class TaskService {
     if (dto.dueDate !== undefined) {
       task.dueDate = dto.dueDate ? new Date(dto.dueDate) : null;
     }
-    return this.taskRepo.save(task);
+    return this.repo.save(task);
   }
 
   async remove(id: string): Promise<void> {
     const task = await this.findOne(id);
-    await this.taskRepo.remove(task);
+    await this.repo.remove(task);
   }
 }
