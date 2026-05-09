@@ -84,6 +84,11 @@ export class AuthService {
         role: user.role,
         status: user.status,
       },
+      tenant: {
+        id: this.request.tenantId,
+        slug: this.request.tenantSlug,
+        schema: this.request.tenantSchema,
+      },
     };
   }
 }
