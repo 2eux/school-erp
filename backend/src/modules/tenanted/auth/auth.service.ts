@@ -6,23 +6,18 @@ import {
 } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
-import { DataSource, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { TENANT_DATASOURCE } from '~/tenancy/tenancy.constants';
 import type { RequestWithTenant } from '~/tenancy/tenant.middleware';
+import { UserRepository } from '../users/user.repository';
 import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
-  private readonly userRepo: Repository<User>;
-
   constructor(
-    @Inject(TENANT_DATASOURCE) ds: DataSource,
+    private readonly userRepo: UserRepository,
     @Inject(REQUEST) private readonly request: RequestWithTenant,
     private readonly jwtService: JwtService,
-  ) {
-    this.userRepo = ds.getRepository(User);
-  }
+  ) {}
 
   async register(
     email: string,
@@ -30,36 +25,24 @@ export class AuthService {
     firstName: string,
     lastName: string,
   ) {
-    const existing = await this.userRepo.findOne({ where: { email } });
+    const existing = await this.userRepo.findByEmail(email);
     if (existing) {
       throw new ConflictException('User already exists');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = this.userRepo.create({
+    const user = await this.userRepo.saveNew({
       email,
       password: hashedPassword,
       firstName,
       lastName,
     });
 
-    await this.userRepo.save(user);
     return this.generateToken(user);
   }
 
   async login(email: string, password: string) {
-    const user = await this.userRepo.findOne({
-      where: { email },
-      select: {
-        id: true,
-        email: true,
-        password: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        status: true,
-      },
-    });
+    const user = await this.userRepo.findByEmailWithPassword(email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -73,7 +56,7 @@ export class AuthService {
   }
 
   async getMe(userId: string) {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const user = await this.userRepo.findById(userId);
     if (!user) {
       throw new UnauthorizedException('User not found');
     }

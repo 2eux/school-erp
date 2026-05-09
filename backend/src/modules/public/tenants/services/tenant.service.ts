@@ -6,12 +6,14 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
+import { ConfigService } from '@nestjs/config';
 import { Repository, DataSource, In } from 'typeorm';
 import { Tenant } from '../entities/tenant.entity';
 import { Membership } from '~/platform/memberships/entities/membership.entity';
 import { MembershipRole } from '~/platform/memberships/enums/membership-role.enum';
 import { Key } from '~/common/enums/keys.enum';
 import { TenantConnectionService } from '~/tenancy/tenant-connection.service';
+import { TenantMigrationService } from '~/tenancy/tenant-migration.service';
 import { CreateTenantDto } from '../dto/create-tenant.dto';
 import { UpdateTenantDto } from '../dto/update-tenant.dto';
 import { PlatformRole } from '~/platform/users/enums/platform-role.enum';
@@ -29,42 +31,71 @@ export class TenantService {
     @InjectDataSource()
     private dataSource: DataSource,
     private tenantConnectionService: TenantConnectionService,
+    private tenantMigrationService: TenantMigrationService,
+    private configService: ConfigService,
   ) {}
 
   /**
-   * Creates a tenant. If ownerId is provided the user automatically
-   * receives an OWNER membership for the new tenant.
+   * Creates a tenant. If the requester is not a SUPER_ADMIN they
+   * automatically receive an OWNER membership for the new tenant.
+   *
+   * The entire operation (record + schema + membership) is wrapped
+   * in a transaction so partial state is rolled back on failure.
    */
   async createTenant(
     ctx: RequestContextDto,
     dto: CreateTenantDto,
   ): Promise<Tenant> {
     const { user } = ctx;
-    const ownerId = user?.role === PlatformRole.SUPER_ADMIN ? undefined : user?.id ?? '';
-    
-    const existing = await this.tenantRepository.findOne({ where: { slug: dto.slug } });
-    if (existing) {
-      throw new ConflictException('Tenant slug already exists');
-    }
+    const ownerId =
+      user?.role === PlatformRole.SUPER_ADMIN ? undefined : user?.id ?? '';
 
-    const schemaName = `${Key.TenantSchemaPrefix}${dto.slug.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    const tenant = this.tenantRepository.create({ ...dto, schemaName });
-    await this.tenantRepository.save(tenant);
-
-    await this.createTenantSchema(schemaName);
-    await this.runTenantMigrations(schemaName);
-
-    if (ownerId) {
-      const membership = this.membershipRepository.create({
-        userId: ownerId,
-        tenantId: tenant.id,
-        role: MembershipRole.OWNER,
+    try {
+      const existing = await queryRunner.manager.findOne(Tenant, {
+        where: { slug: dto.slug },
       });
-      await this.membershipRepository.save(membership);
-    }
+      if (existing) {
+        throw new ConflictException('Tenant slug already exists');
+      }
 
-    return tenant;
+      const schemaName = `${Key.TenantSchemaPrefix}${dto.slug.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+
+      const tenant = queryRunner.manager.create(Tenant, {
+        ...dto,
+        schemaName,
+      });
+      await queryRunner.manager.save(tenant);
+
+      // PostgreSQL DDL is transactional — CREATE SCHEMA rolls back with the transaction
+      const quoted = this.quoteIdentifier(schemaName);
+      await queryRunner.query(`CREATE SCHEMA IF NOT EXISTS ${quoted}`);
+
+      await this.runTenantMigrations(schemaName);
+
+      if (ownerId) {
+        const membership = queryRunner.manager.create(Membership, {
+          userId: ownerId,
+          tenantId: tenant.id,
+          role: MembershipRole.OWNER,
+        });
+        await queryRunner.manager.save(membership);
+      }
+
+      await queryRunner.commitTransaction();
+      return tenant;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      this.logger.error(
+        `Failed to create tenant "${dto.slug}": ${error.message}`,
+      );
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async getAllTenants(ctx: RequestContextDto): Promise<Tenant[]> {
@@ -143,22 +174,22 @@ export class TenantService {
   async deleteTenant(ctx: RequestContextDto, id: string): Promise<void> {
     const tenant = await this.findById(ctx, id);
     if (!tenant) {
-      throw new ConflictException('Tenant not found');
+      throw new NotFoundException('Tenant not found');
     }
 
-    await this.dropTenantSchema(tenant.schemaName);
-    await this.tenantRepository.delete(id);
-  }
-
-  private async createTenantSchema(schemaName: string) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
+    await queryRunner.startTransaction();
+
     try {
-      const quoted = this.quoteIdentifier(schemaName);
-      await queryRunner.query(`CREATE SCHEMA IF NOT EXISTS ${quoted}`);
-      this.logger.log(`Schema ${schemaName} created successfully`);
+      const quoted = this.quoteIdentifier(tenant.schemaName);
+      await queryRunner.query(`DROP SCHEMA IF EXISTS ${quoted} CASCADE`);
+      await queryRunner.manager.delete(Tenant, id);
+      await queryRunner.commitTransaction();
+      this.logger.log(`Tenant "${tenant.slug}" and schema ${tenant.schemaName} deleted`);
     } catch (error) {
-      this.logger.error(`Error creating schema ${schemaName}: ${error.message}`);
+      await queryRunner.rollbackTransaction();
+      this.logger.error(`Failed to delete tenant "${tenant.slug}": ${error.message}`);
       throw error;
     } finally {
       await queryRunner.release();
@@ -166,24 +197,21 @@ export class TenantService {
   }
 
   private async runTenantMigrations(schemaName: string) {
-    // Always synchronize when setting up a new tenant schema,
-    // regardless of DB_SYNC. In production, replace with explicit migrations.
-    await this.tenantConnectionService.synchronizeSchema(schemaName);
-  }
+    const isProduction =
+      this.configService.get<string>('NODE_ENV') === 'production';
 
-  private async dropTenantSchema(schemaName: string) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    try {
-      const quoted = this.quoteIdentifier(schemaName);
-      await queryRunner.query(`DROP SCHEMA IF EXISTS ${quoted} CASCADE`);
-      this.logger.log(`Schema ${schemaName} dropped successfully`);
-    } catch (error) {
-      this.logger.error(`Error dropping schema ${schemaName}: ${error.message}`);
-      throw error;
-    } finally {
-      await queryRunner.release();
+    if (isProduction) {
+      const result =
+        await this.tenantMigrationService.runMigrationsForSchema(schemaName);
+      if (result.status === 'failed') {
+        throw new Error(
+          `Migration failed for schema ${schemaName}: ${result.error}`,
+        );
+      }
+      return;
     }
+
+    await this.tenantConnectionService.synchronizeSchema(schemaName);
   }
 
   private quoteIdentifier(identifier: string): string {

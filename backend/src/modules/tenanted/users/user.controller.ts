@@ -23,7 +23,7 @@ export class UserController {
 
   @Get()
   async findAll(@Query() filterUserDto: FilterUserDto) {
-    const users = await this.userService.findAll(filterUserDto);
+    const users = await this.userService.findFiltered(filterUserDto);
 
     return {
       success: true,

@@ -9,6 +9,8 @@ export interface DbConfig {
   database: string;
   sync: boolean;
   logging: LoggerOptions;
+  tenantPoolSize: number;
+  connectionTimeout: number;
 }
 
 export default registerAs('db', (): DbConfig => ({
@@ -19,4 +21,6 @@ export default registerAs('db', (): DbConfig => ({
   database: process.env.DB_NAME!,
   sync: process.env.DB_SYNC === 'true',
   logging: process.env.DB_LOGGING === 'true' ? ['query', 'error', 'schema'] : false,
+  tenantPoolSize: parseInt(process.env.DB_TENANT_POOL_SIZE ?? '20', 10),
+  connectionTimeout: parseInt(process.env.DB_CONNECTION_TIMEOUT ?? '5000', 10),
 }));

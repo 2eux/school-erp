@@ -37,6 +37,8 @@ export const envValidationSchema = Joi.object({
   }),
   DB_SYNC: Joi.boolean().default(false),
   DB_LOGGING: Joi.boolean().default(false),
+  DB_TENANT_POOL_SIZE: Joi.number().integer().min(2).max(200).default(20),
+  DB_CONNECTION_TIMEOUT: Joi.number().integer().min(1000).max(30000).default(5000),
   JWT_SECRET: Joi.string().min(8).required().messages({
     'string.min': 'JWT_SECRET must be at least 8 characters',
     'any.required': 'JWT_SECRET is required',

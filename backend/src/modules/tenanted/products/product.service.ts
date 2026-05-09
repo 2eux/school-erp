@@ -1,51 +1,40 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
-import { TENANT_DATASOURCE } from '~/tenancy/tenancy.constants';
+import { Injectable } from '@nestjs/common';
+import { ProductRepository } from './product.repository';
 import { Product } from './entities/product.entity';
 
 @Injectable()
 export class ProductService {
-  private readonly repo: Repository<Product>;
+  constructor(private readonly productRepo: ProductRepository) {}
 
-  constructor(@Inject(TENANT_DATASOURCE) private readonly ds: DataSource) {
-    this.repo = this.ds.getRepository(Product);
-  }
-
-  async create(productData: Partial<Product>): Promise<Product> {
-    const product = this.repo.create(productData);
-    return this.repo.save(product);
+  async create(data: Partial<Product>): Promise<Product> {
+    return this.productRepo.saveNew(data);
   }
 
   async findAll(): Promise<Product[]> {
-    return this.repo.find({ order: { createdAt: 'DESC' } });
+    return this.productRepo.findAll({ createdAt: 'DESC' } as any);
   }
 
   async findOne(id: string): Promise<Product> {
-    const product = await this.repo.findOne({ where: { id } });
-    if (!product) {
-      throw new NotFoundException('Product not found');
-    }
-    return product;
+    return this.productRepo.findByIdOrFail(id);
   }
 
   async update(id: string, productData: Partial<Product>): Promise<Product> {
-    const result = await this.repo.update(id, productData);
-    if (result.affected === 0) {
-      throw new NotFoundException('Product not found');
-    }
-    return this.findOne(id);
+    const product = await this.productRepo.findByIdOrFail(id);
+    Object.assign(product, productData);
+    return this.productRepo.save(product);
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.repo.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException('Product not found');
-    }
+    const product = await this.productRepo.findByIdOrFail(id);
+    await this.productRepo.remove(product);
   }
 
   async getProductStats() {
-    const [products, total] = await this.repo.findAndCount();
-    const totalValue = products.reduce((sum, p) => sum + Number(p.price) * p.stock, 0);
+    const [products, total] = await this.productRepo.findAndCount();
+    const totalValue = products.reduce(
+      (sum, p) => sum + Number(p.price) * p.stock,
+      0,
+    );
     const totalStock = products.reduce((sum, p) => sum + p.stock, 0);
 
     return {

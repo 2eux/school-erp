@@ -1,4 +1,5 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -11,6 +12,7 @@ import { TenancyModule } from './tenancy/tenancy.module';
 import { AuthModule } from './modules/tenanted/auth/auth.module';
 import { PlatformAuthModule } from '~/platform/auth/platform-auth.module';
 import { TenantMiddleware } from '~/tenancy/tenant.middleware';
+import { TenantCleanupInterceptor } from '~/tenancy/tenant-cleanup.interceptor';
 import { MembershipModule } from '~/platform/memberships/membership.module';
 import { UserModule } from '~/platform/users/user.module';
 import { ProductModule } from '~/tenanted/products/product.module';
@@ -42,7 +44,13 @@ const envFilePath = ['.env', `.env.${nodeEnv}`];
     MembershipModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TenantCleanupInterceptor,
+    },
+  ],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

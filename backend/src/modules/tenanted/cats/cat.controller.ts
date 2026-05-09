@@ -9,12 +9,14 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CatService } from './cat.service';
 import { CreateCatDto } from './dto/create-cat.dto';
 import { UpdateCatDto } from './dto/update-cat.dto';
+import { FilterCatDto } from './dto/filter-cat.dto';
 
 @Controller('cats')
 @UseGuards(JwtAuthGuard)
@@ -27,8 +29,8 @@ export class CatController {
   }
 
   @Get()
-  findAll() {
-    return this.catService.findAll();
+  findAll(@Query() filterCatDto: FilterCatDto) {
+    return this.catService.findAll(filterCatDto);
   }
 
   @Get(':id')

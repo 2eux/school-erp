@@ -1,8 +1,13 @@
-import { BadRequestException, Injectable, NestMiddleware } from '@nestjs/common';
+import { Injectable, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
 import { Key } from '~/common/enums/keys.enum';
 import { TenantStatus } from '~/platform/tenants/enums/tenant-status.enum';
 import { TenantService } from '~/platform/tenants/services/tenant.service';
+import {
+  TenantContextMissingException,
+  TenantInactiveException,
+  TenantNotFoundException,
+} from './exceptions/tenant.exceptions';
 
 export interface RequestWithTenant extends Request {
   tenantId?: string;
@@ -10,6 +15,7 @@ export interface RequestWithTenant extends Request {
   tenantSlug?: string;
 }
 
+const SLUG_PATTERN = /^[a-z0-9]([a-z0-9_-]*[a-z0-9])?$/;
 
 @Injectable()
 export class TenantMiddleware implements NestMiddleware {
@@ -17,15 +23,23 @@ export class TenantMiddleware implements NestMiddleware {
 
   async use(req: RequestWithTenant, res: Response, next: NextFunction) {
     const slug = this.extractSlug(req);
-    
+
     if (!slug) {
-      throw new BadRequestException('Tenant slug is required');
+      throw new TenantContextMissingException();
+    }
+
+    if (!SLUG_PATTERN.test(slug)) {
+      throw new TenantNotFoundException(slug);
     }
 
     const tenant = await this.tenantService.findBySlug(slug);
-    
-    if (!tenant || tenant.status !== TenantStatus.ACTIVE) {
-      throw new BadRequestException('Invalid or inactive tenant');
+
+    if (!tenant) {
+      throw new TenantNotFoundException(slug);
+    }
+
+    if (tenant.status !== TenantStatus.ACTIVE) {
+      throw new TenantInactiveException(slug);
     }
 
     req.tenantId = tenant.id;
@@ -35,15 +49,13 @@ export class TenantMiddleware implements NestMiddleware {
   }
 
   private extractSlug(req: Request): string | null {
-    // Extract from header (e.g. x-tenant-id) — priority method
     const tenantSlug = req.headers[Key.TenantKeyHeader.toLowerCase()] as string;
     if (tenantSlug) return tenantSlug;
 
-    // Extract from domain
     const host = req.headers.host || '';
-    const subdomain = host?.split('.')[0];
-    
-    if(!['www', 'api'].includes(subdomain)) {
+    const subdomain = host.split('.')[0];
+
+    if (!['www', 'api'].includes(subdomain)) {
       return subdomain;
     }
 

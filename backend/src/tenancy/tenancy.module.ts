@@ -1,12 +1,48 @@
 import { Global, Module, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { DataSource } from 'typeorm';
+import type { DbConfig } from '../config/db.config';
 import { TenantConnectionService } from './tenant-connection.service';
-import { TENANT_DATASOURCE } from './tenancy.constants';
+import { TenantMigrationService } from './tenant-migration.service';
+import { TENANT_DATASOURCE, TENANT_POOL_DATASOURCE } from './tenancy.constants';
+import { TenantContextMissingException } from './exceptions/tenant.exceptions';
+import { attachProxyToRequest } from './tenant-cleanup.interceptor';
 
 @Global()
 @Module({
+  imports: [ConfigModule],
   providers: [
+    {
+      provide: TENANT_POOL_DATASOURCE,
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService): Promise<DataSource> => {
+        const db = configService.get<DbConfig>('db')!;
+
+        const ds = new DataSource({
+          type: 'postgres',
+          host: db.host,
+          port: db.port,
+          username: db.username,
+          password: db.password,
+          database: db.database,
+          entities: [
+            __dirname + '/../modules/tenanted/**/entities/*.entity{.ts,.js}',
+          ],
+          synchronize: false,
+          logging: db.logging,
+          extra: {
+            max: db.tenantPoolSize,
+            connectionTimeoutMillis: db.connectionTimeout,
+          },
+        });
+
+        await ds.initialize();
+        return ds;
+      },
+    },
     TenantConnectionService,
+    TenantMigrationService,
     {
       provide: TENANT_DATASOURCE,
       scope: Scope.REQUEST,
@@ -14,14 +50,14 @@ import { TENANT_DATASOURCE } from './tenancy.constants';
       useFactory: async (req: any, tenantConn: TenantConnectionService) => {
         const schema = req.tenantSchema;
         if (!schema) {
-          throw new Error(
-            'Tenant context not available — ensure TenantMiddleware is applied to this route',
-          );
+          throw new TenantContextMissingException();
         }
-        return tenantConn.getTenantConnection(schema);
+        const proxy = await tenantConn.getScopedConnection(schema);
+        attachProxyToRequest(req, proxy);
+        return proxy;
       },
     },
   ],
-  exports: [TenantConnectionService, TENANT_DATASOURCE],
+  exports: [TenantConnectionService, TenantMigrationService, TENANT_DATASOURCE],
 })
 export class TenancyModule {}
