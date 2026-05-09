@@ -6,8 +6,10 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
+import type { DbConfig } from '../config/db.config';
 import { TENANT_POOL_DATASOURCE } from './tenancy.constants';
 import { TenantDataSourceProxy } from './tenant-datasource.proxy';
+import { createTenantSchemaSyncDataSourceOptions } from './tenant.datasource';
 
 @Injectable()
 export class TenantConnectionService implements OnApplicationShutdown {
@@ -49,21 +51,10 @@ export class TenantConnectionService implements OnApplicationShutdown {
       );
     }
 
-    const db = this.configService.get('db')!;
-    const tmpDs = new DataSource({
-      type: 'postgres',
-      host: (db as any).host,
-      port: (db as any).port,
-      username: (db as any).username,
-      password: (db as any).password,
-      database: (db as any).database,
-      schema: schemaName,
-      entities: [
-        __dirname + '/../modules/tenanted/**/entities/*.entity{.ts,.js}',
-      ],
-      synchronize: false,
-      logging: false,
-    });
+    const db = this.configService.get<DbConfig>('db')!;
+    const tmpDs = new DataSource(
+      createTenantSchemaSyncDataSourceOptions(db, schemaName),
+    );
 
     await tmpDs.initialize();
     try {

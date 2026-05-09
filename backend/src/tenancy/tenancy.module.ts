@@ -5,6 +5,7 @@ import { DataSource } from 'typeorm';
 import type { DbConfig } from '../config/db.config';
 import { TenantConnectionService } from './tenant-connection.service';
 import { TenantMigrationService } from './tenant-migration.service';
+import { createTenantPoolDataSourceOptions } from './tenant.datasource';
 import { TENANT_DATASOURCE, TENANT_POOL_DATASOURCE } from './tenancy.constants';
 import { TenantContextMissingException } from './exceptions/tenant.exceptions';
 import { attachProxyToRequest } from './tenant-cleanup.interceptor';
@@ -18,24 +19,7 @@ import { attachProxyToRequest } from './tenant-cleanup.interceptor';
       inject: [ConfigService],
       useFactory: async (configService: ConfigService): Promise<DataSource> => {
         const db = configService.get<DbConfig>('db')!;
-
-        const ds = new DataSource({
-          type: 'postgres',
-          host: db.host,
-          port: db.port,
-          username: db.username,
-          password: db.password,
-          database: db.database,
-          entities: [
-            __dirname + '/../modules/tenanted/**/entities/*.entity{.ts,.js}',
-          ],
-          synchronize: false,
-          logging: db.logging,
-          extra: {
-            max: db.tenantPoolSize,
-            connectionTimeoutMillis: db.connectionTimeout,
-          },
-        });
+        const ds = new DataSource(createTenantPoolDataSourceOptions(db));
 
         await ds.initialize();
         return ds;
