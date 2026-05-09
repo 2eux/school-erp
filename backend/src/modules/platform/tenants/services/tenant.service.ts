@@ -9,14 +9,14 @@ import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Repository, DataSource, In } from 'typeorm';
 import { Tenant } from '../entities/tenant.entity';
-import { Membership } from '~/platform/memberships/entities/membership.entity';
-import { MembershipRole } from '~/platform/memberships/enums/membership-role.enum';
+import { Membership } from 'src/modules/platform/memberships/entities/membership.entity';
+import { MembershipRole } from 'src/modules/platform/memberships/enums/membership-role.enum';
 import { Key } from '~/common/enums/keys.enum';
 import { TenantConnectionService } from '~/tenancy/tenant-connection.service';
 import { TenantMigrationService } from '~/tenancy/tenant-migration.service';
 import { CreateTenantDto } from '../dto/create-tenant.dto';
 import { UpdateTenantDto } from '../dto/update-tenant.dto';
-import { PlatformRole } from '~/platform/users/enums/platform-role.enum';
+import { PlatformRole } from 'src/modules/platform/users/enums/platform-role.enum';
 import { RequestContextDto } from '~/common/dto/request-context.dto';
 
 @Injectable()
@@ -50,10 +50,20 @@ export class TenantService {
     const ownerId =
       user?.role === PlatformRole.SUPER_ADMIN ? undefined : user?.id ?? '';
 
+    // Two-phase flow:
+    // 1) Create tenant record + schema and COMMIT (so other connections can see it)
+    // 2) Run migrations/sync using a separate connection
+    // 3) Create membership
+    // If phase (2) fails, perform compensating rollback (drop schema + delete tenant).
+    const schemaName = `${Key.TenantSchemaPrefix}${dto.slug
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '_')}`;
+
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
+    let tenant: Tenant | null = null;
     try {
       const existing = await queryRunner.manager.findOne(Tenant, {
         where: { slug: dto.slug },
@@ -62,39 +72,72 @@ export class TenantService {
         throw new ConflictException('Tenant slug already exists');
       }
 
-      const schemaName = `${Key.TenantSchemaPrefix}${dto.slug.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
-
-      const tenant = queryRunner.manager.create(Tenant, {
+      tenant = queryRunner.manager.create(Tenant, {
         ...dto,
         schemaName,
       });
       await queryRunner.manager.save(tenant);
 
-      // PostgreSQL DDL is transactional — CREATE SCHEMA rolls back with the transaction
       const quoted = this.quoteIdentifier(schemaName);
       await queryRunner.query(`CREATE SCHEMA IF NOT EXISTS ${quoted}`);
 
-      await this.runTenantMigrations(schemaName);
-
-      if (ownerId) {
-        const membership = queryRunner.manager.create(Membership, {
-          userId: ownerId,
-          tenantId: tenant.id,
-          role: MembershipRole.OWNER,
-        });
-        await queryRunner.manager.save(membership);
-      }
-
       await queryRunner.commitTransaction();
-      return tenant;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      this.logger.error(
-        `Failed to create tenant "${dto.slug}": ${error.message}`,
-      );
+      this.logger.error(`Failed to create tenant "${dto.slug}": ${error.message}`);
       throw error;
     } finally {
       await queryRunner.release();
+    }
+
+    try {
+      await this.runTenantMigrations(schemaName);
+
+      if (ownerId && tenant) {
+        await this.membershipRepository.save(
+          this.membershipRepository.create({
+            userId: ownerId,
+            tenantId: tenant.id,
+            role: MembershipRole.OWNER,
+          }),
+        );
+      }
+
+      // tenant is always set if we got here, but keep types safe
+      return tenant as Tenant;
+    } catch (error) {
+      // Compensating rollback: best-effort cleanup to avoid orphaned tenants/schemas.
+      try {
+        const cleanupRunner = this.dataSource.createQueryRunner();
+        await cleanupRunner.connect();
+        await cleanupRunner.startTransaction();
+        try {
+          const quoted = this.quoteIdentifier(schemaName);
+          await cleanupRunner.query(`DROP SCHEMA IF EXISTS ${quoted} CASCADE`);
+          if (tenant?.id) {
+            await cleanupRunner.manager.delete(Tenant, tenant.id);
+          } else {
+            await cleanupRunner.manager.delete(Tenant, { slug: dto.slug });
+          }
+          await cleanupRunner.commitTransaction();
+        } catch (cleanupErr) {
+          await cleanupRunner.rollbackTransaction();
+          this.logger.error(
+            `Failed compensating rollback for tenant "${dto.slug}": ${(cleanupErr as Error).message}`,
+          );
+        } finally {
+          await cleanupRunner.release();
+        }
+      } catch (cleanupOuterErr) {
+        this.logger.error(
+          `Failed to initialize compensating rollback: ${(cleanupOuterErr as Error).message}`,
+        );
+      }
+
+      this.logger.error(
+        `Failed to finalize tenant "${dto.slug}" setup: ${error.message}`,
+      );
+      throw error;
     }
   }
 

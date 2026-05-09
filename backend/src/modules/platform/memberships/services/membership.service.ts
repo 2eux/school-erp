@@ -2,8 +2,8 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RequestContextDto } from '~/common/dto/request-context.dto';
-import { TenantService } from '~/platform/tenants/services/tenant.service';
-import { UserService } from '~/platform/users/user.service';
+import { TenantService } from 'src/modules/platform/tenants/services/tenant.service';
+import { UserService } from 'src/modules/platform/users/user.service';
 import { CreateMembershipDto } from '../dto/create-membership.dto';
 import { UpdateMembershipRoleDto } from '../dto/update-membership-role.dto';
 import { Membership } from '../entities/membership.entity';

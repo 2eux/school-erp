@@ -15,7 +15,7 @@ import { Roles } from '~/common/decorators/roles.decorator';
 import { RequestContextDto } from '~/common/dto/request-context.dto';
 import { PlatformJwtAuthGuard } from '~/common/guards/platform-jwt-auth.guard';
 import { RolesGuard } from '~/common/guards/roles.guard';
-import { PlatformRole } from '~/platform/users/enums/platform-role.enum';
+import { PlatformRole } from 'src/modules/platform/users/enums/platform-role.enum';
 import { CreateTenantDto } from '../dto/create-tenant.dto';
 import { UpdateTenantDto } from '../dto/update-tenant.dto';
 import { TenantService } from '../services/tenant.service';

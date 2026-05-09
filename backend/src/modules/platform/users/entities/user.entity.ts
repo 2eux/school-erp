@@ -16,7 +16,7 @@ import {
 } from 'typeorm';
 import { PlatformRole } from '../enums/platform-role.enum';
 import { UserStatus } from '../enums/user-status.enum';
-import { Membership } from '~/platform/memberships/entities/membership.entity';
+import { Membership } from 'src/modules/platform/memberships/entities/membership.entity';
 
 @Entity('users', { schema: 'public' })
 export class User {

@@ -10,14 +10,14 @@ import { TaskModule } from './modules/tenanted/tasks/task.module';
 import { DatabaseModule } from './database/database.module';
 import { TenancyModule } from './tenancy/tenancy.module';
 import { AuthModule } from './modules/tenanted/auth/auth.module';
-import { PlatformAuthModule } from '~/platform/auth/platform-auth.module';
+import { PlatformAuthModule } from 'src/modules/platform/auth/platform-auth.module';
 import { TenantMiddleware } from '~/tenancy/tenant.middleware';
 import { TenantCleanupInterceptor } from '~/tenancy/tenant-cleanup.interceptor';
-import { MembershipModule } from '~/platform/memberships/membership.module';
-import { UserModule } from '~/platform/users/user.module';
+import { MembershipModule } from 'src/modules/platform/memberships/membership.module';
+import { UserModule } from 'src/modules/platform/users/user.module';
 import { ProductModule } from '~/tenanted/products/product.module';
 import { TenantUserModule } from '~/tenanted/users/user.module';
-import { TenantModule } from '~/platform/tenants/tenant.module';
+import { TenantModule } from 'src/modules/platform/tenants/tenant.module';
 
 const nodeEnv = process.env.NODE_ENV ?? 'development';
 const envFilePath = ['.env', `.env.${nodeEnv}`];

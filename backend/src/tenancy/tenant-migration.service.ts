@@ -3,8 +3,8 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 import type { DbConfig } from '../config/db.config';
-import { Tenant } from '../modules/public/tenants/entities/tenant.entity';
-import { TenantStatus } from '../modules/public/tenants/enums/tenant-status.enum';
+import { Tenant } from '../modules/platform/tenants/entities/tenant.entity';
+import { TenantStatus } from '../modules/platform/tenants/enums/tenant-status.enum';
 
 export interface MigrationResult {
   schema: string;

@@ -23,7 +23,7 @@
       "~/utils/*":["src/utils/*"],
       "~/tenancy/*":["src/tenancy/*"],
       // "~/modules/*":["src/modules/*"],
-      "~/platform/*":["src/modules/public/*"],
+      "~/platform/*":["src/modules/platform/*"],
       "~/tenanted/*":["src/modules/tenanted/*"],
     },
     "incremental": true,

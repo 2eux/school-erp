@@ -7,8 +7,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { User } from '~/platform/users/entities/user.entity';
-import { UserStatus } from '~/platform/users/enums/user-status.enum';
+import { User } from 'src/modules/platform/users/entities/user.entity';
+import { UserStatus } from 'src/modules/platform/users/enums/user-status.enum';
 import { PlatformRegisterDto } from './dto/platform-register.dto';
 import { PlatformLoginDto } from './dto/platform-login.dto';
 

@@ -1,8 +1,8 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
 import { Key } from '~/common/enums/keys.enum';
-import { TenantStatus } from '~/platform/tenants/enums/tenant-status.enum';
-import { TenantService } from '~/platform/tenants/services/tenant.service';
+import { TenantStatus } from 'src/modules/platform/tenants/enums/tenant-status.enum';
+import { TenantService } from 'src/modules/platform/tenants/services/tenant.service';
 import {
   TenantContextMissingException,
   TenantInactiveException,
@@ -52,7 +52,9 @@ export class TenantMiddleware implements NestMiddleware {
     const tenantSlug = req.headers[Key.TenantKeyHeader.toLowerCase()] as string;
     if (tenantSlug) return tenantSlug;
 
-    const host = req.headers.host || '';
+    // Prefer Express' parsed hostname (already strips port); fall back to host header.
+    const rawHost = (req.hostname || req.headers.host || '').toString();
+    const host = rawHost.split(':')[0]; // defensive: strip port if present
     const subdomain = host.split('.')[0];
 
     if (!['www', 'api'].includes(subdomain)) {

@@ -13,7 +13,7 @@ import { Roles } from '~/common/decorators/roles.decorator';
 import { RequestContextDto } from '~/common/dto/request-context.dto';
 import { PlatformJwtAuthGuard } from '~/common/guards/platform-jwt-auth.guard';
 import { RolesGuard } from '~/common/guards/roles.guard';
-import { PlatformRole } from '~/platform/users/enums/platform-role.enum';
+import { PlatformRole } from 'src/modules/platform/users/enums/platform-role.enum';
 import { CreateMembershipDto } from '../dto/create-membership.dto';
 import { UpdateMembershipRoleDto } from '../dto/update-membership-role.dto';
 import { MembershipService } from '../services/membership.service';

@@ -2,7 +2,7 @@ import { Request } from 'express';
 import { plainToClass } from 'class-transformer';
 import { RequestContextDto } from '~/common/dto/request-context.dto';
 import { Key } from '~/common/enums/keys.enum';
-import { UserDto } from '~/platform/users/dto/user.dto';
+import { UserDto } from 'src/modules/platform/users/dto/user.dto';
 
 declare module "express" { 
   export interface Request {

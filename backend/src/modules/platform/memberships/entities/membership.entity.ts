@@ -8,8 +8,8 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
-import { Tenant } from '~/platform/tenants/entities/tenant.entity';
-import { User } from '~/platform/users/entities/user.entity';
+import { Tenant } from 'src/modules/platform/tenants/entities/tenant.entity';
+import { User } from 'src/modules/platform/users/entities/user.entity';
 import { MembershipRole } from '../enums/membership-role.enum';
 
 @Entity('memberships', { schema: 'public' })

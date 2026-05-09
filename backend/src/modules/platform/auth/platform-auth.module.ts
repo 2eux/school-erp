@@ -5,7 +5,7 @@ import type { SignOptions } from 'jsonwebtoken';
 import type { StringValue } from 'ms';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from '~/platform/users/entities/user.entity';
+import { User } from 'src/modules/platform/users/entities/user.entity';
 import { PlatformAuthService } from './platform-auth.service';
 import { PlatformAuthController } from './platform-auth.controller';
 import { PlatformJwtStrategy } from './platform-jwt.strategy';
