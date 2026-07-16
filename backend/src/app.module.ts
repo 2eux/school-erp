@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { configLoaders, envValidationSchema } from './config';
 import { DatabaseModule } from './database/database.module';
+import { AuthModule } from './modules/auth/auth.module';
 import { CatsModule } from './modules/cats/cats.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 
@@ -19,6 +20,7 @@ const envFilePath = ['.env', `.env.${nodeEnv}`];
       load: configLoaders,
     }),
     DatabaseModule,
+    AuthModule,
     CatsModule,
     TasksModule,
   ],

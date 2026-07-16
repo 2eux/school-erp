@@ -1,6 +1,58 @@
-import Link from "next/link";
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.school.servo.host';
 
 export default function SignupPage() {
+  const router = useRouter();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${API_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || 'Registration failed');
+      }
+
+      const user = await res.json();
+      // Auto-login after successful registration
+      const loginRes = await fetch(`${API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (loginRes.ok) {
+        const loginData = await loginRes.json();
+        localStorage.setItem('accessToken', loginData.accessToken);
+        localStorage.setItem('user', JSON.stringify(loginData.user));
+      }
+
+      router.push('/dashboard');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg">
@@ -10,34 +62,66 @@ export default function SignupPage() {
             Register for School ERP
           </p>
         </div>
-        <form className="mt-8 space-y-6">
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="bg-red-50 text-red-600 px-4 py-2 rounded-md text-sm">
+              {error}
+            </div>
+          )}
           <div className="space-y-4">
             <div>
               <label htmlFor="name">Full Name</label>
-              <input id="name" name="name" type="text" required
+              <input
+                id="name"
+                name="name"
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                placeholder="John Doe" />
+                placeholder="John Doe"
+              />
             </div>
             <div>
               <label htmlFor="email">Email</label>
-              <input id="email" name="email" type="email" required
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                placeholder="user@school.edu" />
+                placeholder="user@school.edu"
+              />
             </div>
             <div>
               <label htmlFor="password">Password</label>
-              <input id="password" name="password" type="password" required
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                placeholder="••••••••" />
+                placeholder="••••••••"
+              />
             </div>
           </div>
-          <button type="submit"
-            className="w-full py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
-            Create Account
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+          >
+            {loading ? 'Creating account...' : 'Create Account'}
           </button>
         </form>
         <p className="text-center text-sm text-gray-600 mt-4">
-          Already have an account? <Link href="/login" className="text-indigo-600">Sign in</Link>
+          Already have an account?{' '}
+          <Link href="/login" className="text-indigo-600">
+            Sign in
+          </Link>
         </p>
       </div>
     </div>
