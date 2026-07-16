@@ -14,9 +14,6 @@ import type { DbConfig } from '../config/database.config';
           throw new Error('Database configuration (db) is incomplete');
         }
 
-        const nodeEnv = configService.get('NODE_ENV');
-        const isProduction = nodeEnv === 'production';
-
         return {
           type: 'postgres' as const,
           host: db.host,
@@ -25,9 +22,7 @@ import type { DbConfig } from '../config/database.config';
           password: db.password,
           database: db.database,
           autoLoadEntities: true,
-          // entities: ['src/**/*.entity.ts'],
-          // migrations: ['src/migrations/*.ts'],
-          synchronize: !isProduction,
+          synchronize: true,
         };
       },
     }),
