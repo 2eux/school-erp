@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -16,7 +17,7 @@ import { UpdateCatDto } from './dto/update-cat.dto';
 
 @Controller('cats')
 export class CatsController {
-  constructor(private readonly catsService: CatsService) {}
+  constructor(@Inject(CatsService) private readonly catsService: CatsService) {}
 
   @Post()
   create(@Body() dto: CreateCatDto) {

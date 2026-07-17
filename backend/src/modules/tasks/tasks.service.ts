@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskStatus } from './entities/task-status.enum';
@@ -7,7 +7,7 @@ import { TasksRepository } from './tasks.repository';
 
 @Injectable()
 export class TasksService {
-  constructor(private readonly tasksRepo: TasksRepository) {}
+  constructor(@Inject(TasksRepository) private readonly tasksRepo: TasksRepository) {}
 
   async create(dto: CreateTaskDto): Promise<Task> {
     const task = this.tasksRepo.create({
