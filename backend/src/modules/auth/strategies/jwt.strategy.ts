@@ -1,9 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import type { JwtConfig } from '../../../config';
-import { AuthService } from '../auth.service';
+import { Inject, Injectable, UnauthorizedException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { PassportStrategy } from "@nestjs/passport";
+import { ExtractJwt, Strategy } from "passport-jwt";
+import type { JwtConfig } from "../../../config";
+import { AuthService } from "../auth.service";
 
 interface JwtPayload {
   sub: string;
@@ -14,14 +14,13 @@ interface JwtPayload {
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
-    configService: ConfigService,
+    @Inject(ConfigService) configService: ConfigService,
     private readonly authService: AuthService,
   ) {
-    const jwtConfig = configService.get<JwtConfig>('jwt');
+    const jwtConfig = configService.get<JwtConfig>("jwt");
     if (!jwtConfig?.secret) {
-      throw new Error('JWT_SECRET is not configured');
+      throw new Error("JWT_SECRET is not configured");
     }
-
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -32,7 +31,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: JwtPayload) {
     const user = await this.authService.findById(payload.sub);
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException("User not found");
     }
     return user;
   }
