@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.school.servo.host';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.school.servo.host/api';
 
 export default function SignupPage() {
   const router = useRouter();
